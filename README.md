@@ -3,7 +3,7 @@ This repository provides code and data required to train and evaluate PREDATOR, 
 
 ### [PREDATOR: Registration of 3D Point Clouds with Low Overlap](https://addlink)
 \*[Shengyu Huang](https://shengyuh.github.io)
-, \*[Zan Gojcic](https://https://zgojcic.github.io/)
+, \*[Zan Gojcic](https://zgojcic.github.io/)
 , [Mikhail Usvyatsov](https://prs.igp.ethz.ch/content/specialinterest/baug/institute-igp/photogrammetry-and-remote-sensing/en/group/people/person-detail.html?persid=242711)
 , [Andreas Wieser](https://gseg.igp.ethz.ch/people/group-head/prof-dr--andreas-wieser.html)
 , [Konrad Schiendler](https://prs.igp.ethz.ch/group/people/person-detail.schindler.html)\
