@@ -1,4 +1,4 @@
-# PREDATOR: Registration of 3D Point Clouds with Low Overlap
+## PREDATOR: Registration of 3D Point Clouds with Low Overlap
 This repository provides code and data required to train and evaluate PREDATOR, a  model  for  **p**airwise point-cloud **re**gistration with **d**eep **at**tention to the **o**verlap **r**egion. It represents the official implementation of the paper:
 
 ### [PREDATOR: Registration of 3D Point Clouds with Low Overlap](https://addlink)
