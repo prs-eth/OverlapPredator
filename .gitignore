@@ -1,0 +1,7 @@
+snapshot/
+*.so
+*.zip
+data_ThreeDMatch/
+weights/
+__pycache__/
+build/

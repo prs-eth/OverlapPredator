@@ -1,0 +1,12 @@
+tqdm==4.38.0
+easydict==1.9
+imageio==2.5.0
+numpy==1.19.4
+scipy==1.5.4
+matplotlib==3.3.3
+open3d==0.10.0
+PyYAML==5.3.1
+scikit_learn==0.23.2
+tensorboardX==2.1
+torch==1.4.0
+torchvision==0.5.0
