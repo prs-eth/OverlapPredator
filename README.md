@@ -1,7 +1,7 @@
 # PREDATOR: Registration of 3D Point Clouds with Low Overlap
 This repository provides code and data required to train and evaluate PREDATOR, a  model  for  **p**airwise point-cloud **re**gistration with **d**eep **at**tention to the **o**verlap **r**egion. It represents the official implementation of the paper:
 
-### [PREDATOR: Registration of 3D Point Clouds with Low Overlap](https://addlink)
+### [PREDATOR: Registration of 3D Point Clouds with Low Overlap](https://arxiv.org/abs/2011.13005)
 
 \*[Shengyu Huang](https://shengyuh.github.io)
 , \*[Zan Gojcic](https://zgojcic.github.io/)
@@ -21,7 +21,12 @@ This repository provides code and data required to train and evaluate PREDATOR, 
 If you find this code useful for your work or use it in your project, please consider citing:
 
 ```shell
-add bibtex
+@article{huang2020predator,
+  title={PREDATOR: Registration of 3D Point Clouds with Low Overlap},
+  author={Shengyu Huang, Zan Gojcic, Mikhail Usvyatsov, Andreas Wieser, Konrad Schindler},
+  journal={arXiv:2011.13005 [cs.CV]},
+  year={2020}
+}
 ```
 
 ### Contact
@@ -32,8 +37,7 @@ If you have any questions, please let us know: Shengyu Huang {shengyu.huang@geod
 
 ## Instructions
 This code has been tested on 
-- Python 3.6.9, PyTorch 1.4.0, CUDA 11.0, gcc 7.5, TITAN Xp
-- Python 3.7.4, PyTorch 1.5.1+cu101, CUDA 10.1, gcc 6.3.0, GeForce RTX 2080 Ti
+- Python 3.6.9/3.7.4, PyTorch 1.4.0/1.5.1, CUDA 10.1/11.0, gcc 6.3/7.5, TITAN Xp/GeForce RTX 2080 Ti/GeForce GTX 1080Ti
 - Python 3.8.5, PyTorch 1.8.0.dev20201124+cu110, CUDA 11.1, gcc 9.3.0, GeForce RTX 3090
 
 **Note**: We observe data loader random crash due to memory issues on machines with less than 64GB CPU RAM.
@@ -48,10 +52,10 @@ cd cpp_wrappers; sh compile_wrappers.sh; cd ..
 ```
 
 ### Datasets
-We provide preprocessed 3DMatch pairwise datasets, you can download them [here](https://drive.google.com/file/d/11oD5YsLn4OBNpLp4d-VEZtHegWpHaa_K/view?usp=sharing)(500MB). Please unzip it and move to ```OverlapPredator```.
-
-### Pretrained weights
-We provide two pretrained models on 3DMatch dataset, Predator and bigPredator. bigPredator is a wider network which is trained on a single GeForce RTX 3090, you can download them [here](https://drive.google.com/file/d/1xLqv1CBiFukRUn7fHYiLTXGuc0q1xo3x/view?usp=sharing)(275MB). Please unzip it and move to ```OverlapPredator```.
+We provide preprocessed 3DMatch pairwise datasets, and two pretrained models on 3DMatch dataset. bigPredator is a wider network which is trained on a single GeForce RTX 3090. You can download data and models by running:
+```shell
+sh download_data_weight.sh
+```
 
 | Model       | first_feats_dim   | gnn_feats_dim | # parameters| performance |
 |:-----------:|:-------------------:|:-------:|:-------:|:-------:|
@@ -72,13 +76,13 @@ python main.py --mode train --exp_dir bigpredator_3dmatch --first_feats_dim 256 
 ### Evaluate
 To evaluate PREDATOR, we first extract features and scores and store them as .pth files, then run RANSAC. To extract features and scores on 3DLoMatch benchmark, run: 
 ```shell
-python main.py --mode test --exp_dir val_predator --pretrain model_zoo/Predator.pth --first_feats_dim 128 --gnn_feats_dim 256 --test_info 3DLoMatch
+python main.py --mode test --exp_dir predator_3dmatch --pretrain weights/Predator.pth --first_feats_dim 128 --gnn_feats_dim 256 --test_info 3DLoMatch
 ```
 the features will be saved to ```snapshot/{exp_dir}/3DLoMatch```. Then we can run RANSAC by:
 ```shell
-python evaluate_predator.py --source_path snapshot/val_predator/3DLoMatch --n_points 1000 --exp_dir est_3dlomatch_1000
+python evaluate_predator.py --source_path snapshot/predator_3dmatch/3DLoMatch --n_points 1000 --exp_dir est_3dlomatch_1000
 ```
-this might take a few minutes, depends on ```n_points``` used by RANSAC. 
+this might take a few minutes, depends on ```n_points``` used by RANSAC. The final results are stored in ```est_3dlomatch_1000/result```.
 
 ### 
 ### Demo
