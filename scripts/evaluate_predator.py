@@ -1,11 +1,13 @@
 """
-Scripts for pairwise registration using different sampling methods
+Scripts for pairwise registration with RANSAC and our probabilistic sampling
 
 Author: Shengyu Huang
 Last modified: 30.11.2020
 """
 
 import torch, os, sys, glob
+cwd = os.getcwd()
+sys.path.append(cwd)
 from tqdm import tqdm
 import numpy as np
 from lib.utils import load_obj, natural_key,setup_seed 

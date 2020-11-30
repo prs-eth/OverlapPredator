@@ -25,7 +25,7 @@ snapshot_arg.add_argument('--snapshot_interval',type=int, default=1)
 net_arg = add_argument_group('Network')
 net_arg.add_argument('--num_layers', type=int, default=4)
 net_arg.add_argument('--in_points_dim', type=int, default=3)
-net_arg.add_argument('--first_feats_dim', type=int, default=256) 
+net_arg.add_argument('--first_feats_dim', type=int, default=128) 
 net_arg.add_argument('--final_feats_dim', type=int, default=32)
 net_arg.add_argument('--first_subsampling_dl', type=float, default=0.025)
 net_arg.add_argument('--in_features_dim', type=int, default=1)
@@ -42,7 +42,7 @@ net_arg.add_argument('--deformable', type=str2bool, default=False)
 net_arg.add_argument('--modulated', type=str2bool, default=False)
 
 # GNN Network configuration
-net_arg.add_argument('--gnn_feats_dim', type = int, default=512,help='feature dimention for DGCNN')
+net_arg.add_argument('--gnn_feats_dim', type = int, default=256,help='feature dimention for DGCNN')
 net_arg.add_argument('--dgcnn_k', type = int, default=10,help='knn graph in DGCNN')
 net_arg.add_argument('--num_head', type = int, default=4,help='cross attention head')
 net_arg.add_argument('--nets', type = str, default="['self','cross','self']",help='GNN configuration')
@@ -85,8 +85,9 @@ data_arg.add_argument('--test_info', type =str, default='3DMatch')
 
 # Demo configurations
 demo_arg = add_argument_group('Demo')
-demo_arg.add_argument('--source_pc', default=None, type=str, help='source point cloud')
-demo_arg.add_argument('--target_pc', default=None, type=str, help='target point cloud')
+demo_arg.add_argument('--src_pcd', default='figures/cloud_bin_21.pth', type=str, help='source point cloud')
+demo_arg.add_argument('--tgt_pcd', default='figures/cloud_bin_34.pth', type=str, help='target point cloud')
+demo_arg.add_argument('--n_points', default=1000, type = int, help='number of points used by RANSAC')
 
 
 # Other configurations
@@ -95,7 +96,7 @@ misc_arg.add_argument('--mode', type=str, default='test')
 misc_arg.add_argument('--gpu_mode', type=str2bool, default=True)
 misc_arg.add_argument('--verbose', type=str2bool, default=True)
 misc_arg.add_argument('--verbose_freq', type = int, default=1000)
-misc_arg.add_argument('--pretrain', type=str, default=None)
+misc_arg.add_argument('--pretrain', type=str, default='weights/Predator.pth')
 
 def get_config():
   args = parser.parse_args()
