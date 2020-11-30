@@ -33,14 +33,14 @@ If you find this code useful for your work or use it in your project, please con
 If you have any questions, please let us know: Shengyu Huang {shengyu.huang@geod.baug.ethz.ch}
 
 ## News
-- 2020-11-30: Code release
+- 2020-11-30: Code and paper release
 
 ## Instructions
 This code has been tested on 
 - Python 3.6.9/3.7.4, PyTorch 1.4.0/1.5.1, CUDA 10.1/11.0, gcc 6.3/7.5, TITAN Xp/GeForce RTX 2080 Ti/GeForce GTX 1080Ti
 - Python 3.8.5, PyTorch 1.8.0.dev20201124+cu110, CUDA 11.1, gcc 9.3.0, GeForce RTX 3090
 
-**Note**: We observe data loader random crash due to memory issues on machines with less than 64GB CPU RAM.
+**Note**: We observe data loader random crash due to memory issues on machines with less than 64GB CPU RAM, please consider reduce the number of workers when having such problems. 
 
 ### Requirements
 Under your working folder, our virtual environment and requirements can be installed by running:
@@ -51,8 +51,8 @@ cd OverlapPredator; pip install -r requirements.txt
 cd cpp_wrappers; sh compile_wrappers.sh; cd ..
 ```
 
-### Datasets
-We provide preprocessed 3DMatch pairwise datasets, and two pretrained models on 3DMatch dataset. bigPredator is a wider network which is trained on a single GeForce RTX 3090. You can download data and models by running:
+### Datasets and pretrained models
+We provide preprocessed 3DMatch pairwise datasets(fragments together with ground truth transformation matrix), and two pretrained models on 3DMatch dataset. bigPredator is a wider network which is trained on a single GeForce RTX 3090. You can download data and models by running:
 ```shell
 sh download_data_weight.sh
 ```
