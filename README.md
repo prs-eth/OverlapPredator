@@ -57,10 +57,13 @@ We provide preprocessed 3DMatch pairwise datasets(fragments together with ground
 sh download_data_weight.sh
 ```
 
-| Model       | first_feats_dim   | gnn_feats_dim | # parameters| performance |
-|:-----------:|:-------------------:|:-------:|:-------:|:-------:|
-| Predator | 128               | 256 | 7.43M| recall: 34%|
-| bigPredator | 256                | 512 | 29.67M| recall: 40%|
+| Model       | first_feats_dim   | gnn_feats_dim | # parameters|
+|:-----------:|:-------------------:|:-------:|:-------:|
+| Predator | 128               | 256 | 7.43M|
+| bigPredator | 256                | 512 | 29.67M|
+
+
+![Results](figures/results.png)
 
 
 ### Train
@@ -74,15 +77,15 @@ python main.py --mode train --exp_dir bigpredator_3dmatch --first_feats_dim 256 
 ```
 
 ### Evaluate
-To evaluate PREDATOR, we first extract features and scores and store them as .pth files, then run RANSAC. To extract features and scores on 3DLoMatch benchmark, run: 
+To evaluate PREDATOR, we first extract features and scores on 3DLoMatch/3DMatch benchmark: 
 ```shell
 python main.py --mode test --exp_dir predator_3dmatch --pretrain weights/Predator.pth --first_feats_dim 128 --gnn_feats_dim 256 --test_info 3DLoMatch
 ```
 the features will be saved to ```snapshot/{exp_dir}/3DLoMatch```. Then we can run RANSAC by:
 ```shell
-python evaluate_predator.py --source_path snapshot/predator_3dmatch/3DLoMatch --n_points 1000 --exp_dir est_3dlomatch_1000
+python evaluate_predator.py --source_path snapshot/predator_3dmatch/3DLoMatch --n_points 1000 --benchmark 3DLoMatch --exp_dir est_3dlomatch_1000
 ```
-this might take a few minutes, depends on ```n_points``` used by RANSAC. The final results are stored in ```est_3dlomatch_1000/result```.
+this might take a few minutes, depends on ```n_points``` used by RANSAC. The final results are stored in ```est_3dlomatch_1000/result```. To evaluate on 3DMatch benchmark, you can simply replace 3DLoMatch by 3DMatch.
 
 ### 
 ### Demo

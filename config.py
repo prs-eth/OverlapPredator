@@ -83,6 +83,11 @@ data_arg.add_argument('--train_info', type = str, default='configs/train_info.pk
 data_arg.add_argument('--val_info', type = str, default='configs/val_info.pkl')
 data_arg.add_argument('--test_info', type =str, default='3DMatch')
 
+# Demo configurations
+demo_arg = add_argument_group('Demo')
+demo_arg.add_argument('--source_pc', default=None, type=str, help='source point cloud')
+demo_arg.add_argument('--target_pc', default=None, type=str, help='target point cloud')
+
 
 # Other configurations
 misc_arg = add_argument_group('Misc')
