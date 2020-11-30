@@ -12,7 +12,9 @@ This repository provides code and data required to train and evaluate PREDATOR, 
 
 
 ### Contact
-If you have any questions, please let us know: Shengyu Huang {shengyu.huang@geod.baug.ethz.ch}, Zan Gojcic {zan.gojcic@geod.baug.ethz.ch}
+If you have any questions, please let us know: 
+- Shengyu Huang {shengyu.huang@geod.baug.ethz.ch}
+- Zan Gojcic {zan.gojcic@geod.baug.ethz.ch}
 
 ## News
 - 2020-11-30: Code and paper release
