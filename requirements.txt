@@ -1,7 +1,8 @@
 matplotlib==3.3.3
 numpy==1.19.4
-torchvision==0.8.2+cu110
-torch == 1.7.1+cu110
+torch == 1.7.1
+torchvision==0.8.2
+torchaudio==0.7.2
 nibabel==3.2.1
 tqdm==4.38.0
 open3d==0.10.0.0

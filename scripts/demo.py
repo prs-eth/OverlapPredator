@@ -54,7 +54,7 @@ class ThreeDMatchDemo(Dataset):
         trans = np.ones((3,1)).astype(np.float32)
         correspondences = torch.ones(1,2).long()
 
-        return src_pcd,tgt_pcd,src_feats,tgt_feats,rot,trans, correspondences, src_pcd, tgt_pcd
+        return src_pcd,tgt_pcd,src_feats,tgt_feats,rot,trans, correspondences, src_pcd, tgt_pcd, torch.ones(1)
 
 def lighter(color, percent):
     '''assumes color is rgb between (0, 0, 0) and (1,1,1)'''

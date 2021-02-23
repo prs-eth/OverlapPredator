@@ -17,29 +17,35 @@ If you have any questions, please let us know:
 - Zan Gojcic {zan.gojcic@geod.baug.ethz.ch}
 
 ## News
+- 2021-02-23: Modelnet and KITTI release
 - 2020-11-30: Code and paper release
 
 ## Instructions
 This code has been tested on 
-- Python 3.6.9/3.7.4, PyTorch 1.4.0/1.5.1, CUDA 10.1/11.0, gcc 6.3/7.5, TITAN Xp/GeForce RTX 2080 Ti/GeForce GTX 1080Ti
-- Python 3.8.5, PyTorch 1.8.0.dev20201124+cu110, CUDA 11.1, gcc 9.3.0, GeForce RTX 3090
+- Python 3.8.5, PyTorch 1.7.1, CUDA 11.2, gcc 9.3.0, GeForce RTX 3090/GeForce GTX 1080Ti
 
-**Note**: We observed random data loader crashes due to memory issues on machines with less than 64GB CPU RAM. If you observe similar issues, please consider reducing the number of workers. 
+**Note**: We observe random data loader crashes due to memory issues, if you observe similar issues, please consider reducing the number of workers or increasing CPU RAM. We are working on releasing a sparse convolution-based Predator, stay tuned! 
 
 ### Requirements
 To create a virtual environment and install the required dependences please run:
 ```shell
 git clone https://github.com/ShengyuH/OverlapPredator.git
-virtualenv --no-site-packages predator -p python3; source predator/bin/activate
+virtualenv predator; source predator/bin/activate
 cd OverlapPredator; pip install -r requirements.txt
 cd cpp_wrappers; sh compile_wrappers.sh; cd ..
 ```
 in your working folder.
+**Note**: For Python 3.8.5, please replace ```virtualenv --no-site-packages predator -p python3``` with ```virtualenv predator```. 
 
 ### Datasets and pretrained models
 For KITTI dataset, please follow the instruction on [KITTI Odometry website](http://www.cvlibs.net/datasets/kitti/eval_odometry.php) to download the KITTI odometry training set.
 
-We provide preprocessed 3DMatch pairwise datasets (voxel-grid subsampled fragments together with their ground truth transformation matrices), and two pretrained models on 3DMatch dataset. The preprocessed data and models can be downloaded by running:
+We provide 
+- preprocessed 3DMatch pairwise datasets (voxel-grid subsampled fragments together with their ground truth transformation matrices)
+- modelnet dataset
+- pretrained models on 3DMatch, KITTI and Modelnet
+
+The preprocessed data and models can be downloaded by running:
 ```shell
 sh scripts/download_data_weight.sh
 ```
@@ -82,7 +88,9 @@ We prepared a small demo, which demonstrates the whole Predator pipeline using t
 python scripts/demo.py configs/test/indoor.yaml
 ```
 
-The demo script will visualize input point clouds, inferred overlap regions, and point cloud aligned with the estimated transformation parameters.
+The demo script will visualize input point clouds, inferred overlap regions, and point cloud aligned with the estimated transformation parameters:
+
+<img src="assets/demo.png" alt="demo" width="750"/>
 
 ### KITTI(Outdoor)
 We provide a small script to evaluate Predator on KITTI test set, after configuring KITTI dataset, please run:
@@ -96,6 +104,7 @@ We provide a small script to evaluate Predator on ModelNet test set, please run:
 ```
 python main.py configs/test/modelnet.yaml
 ```
+The rotation and translation errors could be better/worse than the reported ones due to randomness in RANSAC. 
 
 ### Citation
 If you find this code useful for your work or use it in your project, please consider citing:
