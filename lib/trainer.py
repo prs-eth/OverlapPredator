@@ -3,11 +3,11 @@ import numpy as np
 import torch.nn as nn
 from tensorboardX import SummaryWriter
 from lib.timer import Timer, AverageMeter
-from lib.utils import Logger, load_obj, square_distance, validate_gradient, save_obj
+from lib.utils import Logger,validate_gradient
 
 from tqdm import tqdm
-import open3d as o3d
 import torch.nn.functional as F
+import gc
 
 
 class Trainer(object):
@@ -24,10 +24,10 @@ class Trainer(object):
         self.model = args.model.to(self.device)
         self.optimizer = args.optimizer
         self.scheduler = args.scheduler
-        self.scheduler_interval = args.scheduler_interval
-        self.snapshot_interval = args.snapshot_interval
+        self.scheduler_freq = args.scheduler_freq
+        self.snapshot_freq = args.snapshot_freq
         self.snapshot_dir = args.snapshot_dir 
-        self.test_info = args.test_info
+        self.benchmark = args.benchmark
         self.iter_size = args.iter_size
         self.verbose_freq= args.verbose_freq
 
@@ -41,8 +41,9 @@ class Trainer(object):
         self.writer = SummaryWriter(log_dir=args.tboard_dir)
         self.logger = Logger(args.snapshot_dir)
         self.logger.write(f'#parameters {sum([x.nelement() for x in self.model.parameters()])/1000000.} M\n')
+        
 
-        if args.pretrain != None:
+        if (args.pretrain !=''):
             self._load_pretrain(args.pretrain)
         
         self.loader =dict()
@@ -123,7 +124,7 @@ class Trainer(object):
             c_rot, c_trans = inputs['rot'], inputs['trans']
             correspondence = inputs['correspondences']
 
-            src_pcd, tgt_pcd = pcd[:len_src], pcd[len_src:]
+            src_pcd, tgt_pcd = inputs['src_pcd_raw'], inputs['tgt_pcd_raw']
             src_feats, tgt_feats = feats[:len_src], feats[len_src:]
 
             ###################################################
@@ -145,7 +146,7 @@ class Trainer(object):
                 c_rot, c_trans = inputs['rot'], inputs['trans']
                 correspondence = inputs['correspondences']
 
-                src_pcd, tgt_pcd = pcd[:len_src], pcd[len_src:]
+                src_pcd, tgt_pcd = inputs['src_pcd_raw'], inputs['tgt_pcd_raw']
                 src_feats, tgt_feats = feats[:len_src], feats[len_src:]
 
                 ###################################################
@@ -163,6 +164,7 @@ class Trainer(object):
 
 
     def inference_one_epoch(self,epoch, phase):
+        gc.collect()
         assert phase in ['train','val','test']
 
         # init stats meter
@@ -256,43 +258,3 @@ class Trainer(object):
         
         for key, value in stats_meter.items():
             print(key, value.avg)
-
-
-    def test(self):
-        print('Start to evaluate on test datasets...')
-        os.makedirs(f'{self.snapshot_dir}/{self.config.test_info}',exist_ok=True)
-
-        num_iter = int(len(self.loader['test'].dataset) // self.loader['test'].batch_size)
-        c_loader_iter = self.loader['test'].__iter__()
-        self.model.eval()
-        with torch.no_grad():
-            for idx in tqdm(range(num_iter)): # loop through this epoch
-                inputs = c_loader_iter.next()
-                ##################################
-                # load inputs to device.
-                for k, v in inputs.items():  
-                    if type(v) == list:
-                        inputs[k] = [item.to(self.device) for item in v]
-                    else:
-                        inputs[k] = v.to(self.device)
-                ###############################################
-                # forward pass
-                feats, scores_overlap, scores_saliency = self.model(inputs)  #[N1, C1], [N2, C2]
-                pcd = inputs['points'][0]
-                len_src = inputs['stack_lengths'][0][0]
-                c_rot, c_trans = inputs['rot'], inputs['trans']
-                correspondence = inputs['correspondences']
-
-                src_pcd, tgt_pcd = pcd[:len_src], pcd[len_src:]
-                src_feats, tgt_feats = feats[:len_src], feats[len_src:]
-
-                data = dict()
-                data['pcd'] = pcd.cpu()
-                data['feats'] = feats.detach().cpu()
-                data['overlaps'] = scores_overlap.detach().cpu()
-                data['saliency'] = scores_saliency.detach().cpu()
-                data['len_src'] = len_src
-                data['rot'] = c_rot.cpu()
-                data['trans'] = c_trans.cpu()
-
-                torch.save(data,f'{self.snapshot_dir}/{self.config.test_info}/{idx}.pth')

@@ -2,9 +2,9 @@
 Scripts for pairwise registration demo
 
 Author: Shengyu Huang
-Last modified: 30.11.2020
+Last modified: 22.02.2021
 """
-import os, torch, time, shutil, json,glob,sys,copy
+import os, torch, time, shutil, json,glob,sys,copy, argparse
 import numpy as np
 from easydict import EasyDict as edict
 from torch.utils.data import Dataset
@@ -13,12 +13,11 @@ import open3d as o3d
 
 cwd = os.getcwd()
 sys.path.append(cwd)
-from config import get_config
-from datasets.dataset import ThreeDMatchDownsampled
+from datasets.indoor import IndoorDataset
 from datasets.dataloader import get_dataloader
 from models.architectures import KPFCNN
-from lib.utils import load_obj, setup_seed,natural_key
-from lib.benchmark_utils import ransac_pose_estimation, to_pcd, get_blue, get_yellow, to_tensor
+from lib.utils import load_obj, setup_seed,natural_key, load_config
+from lib.benchmark_utils import ransac_pose_estimation, to_o3d_pcd, get_blue, get_yellow, to_tensor
 from lib.trainer import Trainer
 from lib.loss import MetricLoss
 import shutil
@@ -55,7 +54,7 @@ class ThreeDMatchDemo(Dataset):
         trans = np.ones((3,1)).astype(np.float32)
         correspondences = torch.ones(1,2).long()
 
-        return src_pcd,tgt_pcd,src_feats,tgt_feats,rot,trans, correspondences
+        return src_pcd,tgt_pcd,src_feats,tgt_feats,rot,trans, correspondences, src_pcd, tgt_pcd
 
 def lighter(color, percent):
     '''assumes color is rgb between (0, 0, 0) and (1,1,1)'''
@@ -68,8 +67,8 @@ def lighter(color, percent):
 def draw_registration_result(src_raw, tgt_raw, src_overlap, tgt_overlap, src_saliency, tgt_saliency, tsfm):
     ########################################
     # 1. input point cloud
-    src_pcd_before = to_pcd(src_raw)
-    tgt_pcd_before = to_pcd(tgt_raw)
+    src_pcd_before = to_o3d_pcd(src_raw)
+    tgt_pcd_before = to_o3d_pcd(tgt_raw)
     src_pcd_before.paint_uniform_color(get_yellow())
     tgt_pcd_before.paint_uniform_color(get_blue())
     src_pcd_before.estimate_normals(search_param=o3d.geometry.KDTreeSearchParamHybrid(radius=0.3, max_nn=50))
@@ -183,9 +182,12 @@ def main(config, demo_loader):
 
 
 if __name__ == '__main__':
-    config = dict(vars((get_config())))
+    # load configs
+    parser = argparse.ArgumentParser()
+    parser.add_argument('config', type=str, help= 'Path to the config file.')
+    args = parser.parse_args()
+    config = load_config(args.config)
     config = edict(config)
-
     if config.gpu_mode:
         config.device = torch.device('cuda')
     else:
@@ -209,7 +211,7 @@ if __name__ == '__main__':
     
     # create dataset and dataloader
     info_train = load_obj(config.train_info)
-    train_set = ThreeDMatchDownsampled(info_train,config,data_augmentation=True)
+    train_set = IndoorDataset(info_train,config,data_augmentation=True)
     demo_set = ThreeDMatchDemo(config, config.src_pcd, config.tgt_pcd)
 
     _, neighborhood_limits = get_dataloader(dataset=train_set,

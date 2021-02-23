@@ -91,7 +91,13 @@ def to_array(tensor):
     else:
         return tensor
 
-def to_pcd(xyz):
+def to_tsfm(rot,trans):
+    tsfm = np.eye(4)
+    tsfm[:3,:3]=rot
+    tsfm[:3,3]=trans.flatten()
+    return tsfm
+    
+def to_o3d_pcd(xyz):
     """
     Convert tensor/array to open3d PointCloud
     xyz:       [N, 3]
@@ -100,7 +106,7 @@ def to_pcd(xyz):
     pcd.points = o3d.utility.Vector3dVector(to_array(xyz))
     return pcd
 
-def to_feats(embedding):
+def to_o3d_feats(embedding):
     """
     Convert tensor/array to open3d features
     embedding:  [N, 3]
@@ -109,6 +115,21 @@ def to_feats(embedding):
     feats.data = to_array(embedding).T
     return feats
 
+def get_correspondences(src_pcd, tgt_pcd, trans, search_voxel_size, K=None):
+    src_pcd.transform(trans)
+    pcd_tree = o3d.geometry.KDTreeFlann(tgt_pcd)
+
+    correspondences = []
+    for i, point in enumerate(src_pcd.points):
+        [count, idx, _] = pcd_tree.search_radius_vector_3d(point, search_voxel_size)
+        if K is not None:
+            idx = idx[:K]
+        for j in idx:
+            correspondences.append([i, j])
+    
+    correspondences = np.array(correspondences)
+    correspondences = torch.from_numpy(correspondences)
+    return correspondences
 
 def get_blue():
     """
@@ -142,10 +163,29 @@ def random_sample(pcd, feats, N):
         choice = np.random.choice(n1, N)
 
     return pcd[choice], feats[choice]
+    
+def get_angle_deviation(R_pred,R_gt):
+    """
+    Calculate the angle deviation between two rotaion matrice
+    The rotation error is between [0,180]
+    Input:
+        R_pred: [B,3,3]
+        R_gt  : [B,3,3]
+    Return: 
+        degs:   [B]
+    """
+    R=np.matmul(R_pred,R_gt.transpose(0,2,1))
+    tr=np.trace(R,0,1,2) 
+    rads=np.arccos(np.clip((tr-1)/2,-1,1))  # clip to valid range
+    degs=rads/np.pi*180
 
-def ransac_pose_estimation(src_pcd, tgt_pcd, src_feat, tgt_feat, mutual = False, distance_threshold = 0.05):
+    return degs
+
+def ransac_pose_estimation(src_pcd, tgt_pcd, src_feat, tgt_feat, mutual = False, distance_threshold = 0.05, ransac_n = 3):
     """
     RANSAC pose estimation with two checkers
+    We follow D3Feat to set ransac_n = 3 for 3DMatch and ransac_n = 4 for KITTI. 
+    For 3DMatch dataset, we observe significant improvement after changing ransac_n from 4 to 3.
     """
     if(mutual):
         if(torch.cuda.device_count()>=1):
@@ -157,8 +197,8 @@ def ransac_pose_estimation(src_pcd, tgt_pcd, src_feat, tgt_feat, mutual = False,
         selection = mutual_selection(scores[None,:,:])[0]
         row_sel, col_sel = np.where(selection)
         corrs = o3d.utility.Vector2iVector(np.array([row_sel,col_sel]).T)
-        src_pcd = to_pcd(src_pcd)
-        tgt_pcd = to_pcd(tgt_pcd)
+        src_pcd = to_o3d_pcd(src_pcd)
+        tgt_pcd = to_o3d_pcd(tgt_pcd)
         result_ransac = o3d.registration.registration_ransac_based_on_correspondence(
             source=src_pcd, target=tgt_pcd,corres=corrs, 
             max_correspondence_distance=distance_threshold,
@@ -166,14 +206,14 @@ def ransac_pose_estimation(src_pcd, tgt_pcd, src_feat, tgt_feat, mutual = False,
             ransac_n=4,
             criteria=o3d.registration.RANSACConvergenceCriteria(50000, 1000))
     else:
-        src_pcd = to_pcd(src_pcd)
-        tgt_pcd = to_pcd(tgt_pcd)
-        src_feats = to_feats(src_feat)
-        tgt_feats = to_feats(tgt_feat)
+        src_pcd = to_o3d_pcd(src_pcd)
+        tgt_pcd = to_o3d_pcd(tgt_pcd)
+        src_feats = to_o3d_feats(src_feat)
+        tgt_feats = to_o3d_feats(tgt_feat)
 
         result_ransac = o3d.registration.registration_ransac_based_on_feature_matching(
             src_pcd, tgt_pcd, src_feats, tgt_feats,distance_threshold,
-            o3d.registration.TransformationEstimationPointToPoint(False), 3,
+            o3d.registration.TransformationEstimationPointToPoint(False), ransac_n,
             [o3d.registration.CorrespondenceCheckerBasedOnEdgeLength(0.9),
             o3d.registration.CorrespondenceCheckerBasedOnDistance(distance_threshold)],
             o3d.registration.RANSACConvergenceCriteria(50000, 1000))

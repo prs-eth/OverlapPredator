@@ -1,28 +1,28 @@
-import os, torch, time, shutil, json,glob
+import os, torch, time, shutil, json,glob, argparse, shutil
 import numpy as np
-from config import get_config
 from easydict import EasyDict as edict
-from datasets.dataset import ThreeDMatchDownsampled
-from datasets.dataloader import get_dataloader
 
+from datasets.dataloader import get_dataloader, get_datasets
 from models.architectures import KPFCNN
+from lib.utils import setup_seed, load_config
+from lib.tester import get_trainer
+from lib.loss import MetricLoss
+from configs.models import architectures
+
 from torch import optim
 from torch import nn
-
-from lib.utils import load_obj, setup_seed,natural_key
-from lib.trainer import Trainer
-from lib.loss import MetricLoss
-import shutil
 setup_seed(0)
 
 
-
 if __name__ == '__main__':
-    config = dict(vars((get_config())))
+    # load configs
+    parser = argparse.ArgumentParser()
+    parser.add_argument('config', type=str, help= 'Path to the config file.')
+    args = parser.parse_args()
+    config = load_config(args.config)
     config['snapshot_dir'] = 'snapshot/%s' % config['exp_dir']
     config['tboard_dir'] = 'snapshot/%s/tensorboard' % config['exp_dir']
     config['save_dir'] = 'snapshot/%s/checkpoints' % config['exp_dir']
-    
     config = edict(config)
 
     os.makedirs(config.snapshot_dir, exist_ok=True)
@@ -33,6 +33,10 @@ if __name__ == '__main__':
         open(os.path.join(config.snapshot_dir, 'config.json'), 'w'),
         indent=4,
     )
+    if config.gpu_mode:
+        config.device = torch.device('cuda')
+    else:
+        config.device = torch.device('cpu')
     
     # backup the files
     os.system(f'cp -r models {config.snapshot_dir}')
@@ -40,28 +44,11 @@ if __name__ == '__main__':
     os.system(f'cp -r lib {config.snapshot_dir}')
     shutil.copy2('main.py',config.snapshot_dir)
     
-    if config.gpu_mode:
-        config.device = torch.device('cuda')
-    else:
-        config.device = torch.device('cpu')
     
     # model initialization
-    config.architecture = [
-        'simple',
-        'resnetb',
-    ]
-    for i in range(config.num_layers-1):
-        config.architecture.append('resnetb_strided')
-        config.architecture.append('resnetb')
-        config.architecture.append('resnetb')
-    for i in range(config.num_layers-2):
-        config.architecture.append('nearest_upsample')
-        config.architecture.append('unary')
-    config.architecture.append('nearest_upsample')
-    config.architecture.append('last_unary')
+    config.architecture = architectures[config.dataset]
     config.model = KPFCNN(config)   
 
-    
     # create optimizer 
     if config.optimizer == 'SGD':
         config.optimizer = optim.SGD(
@@ -85,14 +72,7 @@ if __name__ == '__main__':
     )
     
     # create dataset and dataloader
-    info_train = load_obj(config.train_info)
-    info_val = load_obj(config.val_info)
-    info_benchmark = load_obj(f'configs/{config.test_info}.pkl')
-
-    train_set = ThreeDMatchDownsampled(info_train,config,data_augmentation=True)
-    val_set = ThreeDMatchDownsampled(info_val,config,data_augmentation=False)
-    benchmark_set = ThreeDMatchDownsampled(info_benchmark,config, data_augmentation=False)
-
+    train_set, val_set, benchmark_set = get_datasets(config)
     config.train_loader, neighborhood_limits = get_dataloader(dataset=train_set,
                                         batch_size=config.batch_size,
                                         shuffle=True,
@@ -112,13 +92,10 @@ if __name__ == '__main__':
     
     # create evaluation metrics
     config.desc_loss = MetricLoss(config)
-
-    # start to train our model
-    trainer = Trainer(config)
+    trainer = get_trainer(config)
     if(config.mode=='train'):
         trainer.train()
     elif(config.mode =='val'):
         trainer.eval()
     else:
-        trainer.test()
-    
+        trainer.test()        

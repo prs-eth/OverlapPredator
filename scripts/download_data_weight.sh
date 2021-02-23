@@ -1,6 +1,6 @@
-wget --no-check-certificate --show-progress https://share.phys.ethz.ch/~gsg/Predator/Predator.zip
-unzip Predator.zip
-mv Predator/data_ThreeDMatch .
-mv Predator/weights .
-rm -r Predator
-rm Predator.zip
+wget --no-check-certificate --show-progress https://share.phys.ethz.ch/~gsg/Predator/predator.zip
+unzip predator.zip
+mv predator/data .
+mv predator/weights .
+rm -r predator
+rm predator.zip

@@ -51,13 +51,18 @@ def load_config(path):
         path (str): path to the config file
 
     Returns: 
-        config (dict): dictionary of the configuration parameters
+        config (dict): dictionary of the configuration parameters, merge sub_dicts
 
     """
     with open(path,'r') as f:
         cfg = yaml.safe_load(f)
+    
+    config = dict()
+    for key, value in cfg.items():
+        for k,v in value.items():
+            config[k] = v
 
-    return cfg
+    return config
 
 
 def setup_seed(seed):

@@ -1,0 +1,68 @@
+misc:
+  exp_dir: kitti
+  mode: test
+  gpu_mode: True
+  verbose: True
+  verbose_freq: 1000
+  snapshot_freq: 1
+  pretrain: weights/kitti.pth
+
+model:
+  num_layers: 4 
+  in_points_dim: 3
+  first_feats_dim: 256
+  final_feats_dim: 32
+  first_subsampling_dl: 0.3
+  in_feats_dim: 1
+  conv_radius: 4.25
+  deform_radius: 5.0 
+  num_kernel_points: 15
+  KP_extent: 2.0
+  KP_influence: linear
+  aggregation_mode: sum 
+  fixed_kernel_points: center
+  use_batch_norm: True 
+  batch_norm_momentum: 0.02
+  deformable: False
+  modulated: False 
+
+overlap_attention_module:
+  gnn_feats_dim: 256 
+  dgcnn_k: 10
+  num_head: 4
+  nets: ['self','cross','self']
+
+loss:
+  pos_margin: 0.1
+  neg_margin: 1.4
+  log_scale: 40
+  pos_radius: 0.21
+  safe_radius: 0.75
+  overlap_radius: 0.45
+  matchability_radius: 0.3 
+  w_circle_loss: 1.0
+  w_overlap_loss: 1.0
+  w_saliency_loss: 0.0
+  max_points: 512
+
+optimiser:
+  optimizer: SGD
+  max_epoch: 150
+  lr: 0.05
+  weight_decay: 0.000001
+  momentum: 0.98
+  scheduler: ExpLR
+  scheduler_gamma: 0.95
+  scheduler_freq: 1
+  iter_size: 1
+
+dataset:
+  dataset: kitti
+  benchmark: odometryKITTI
+  root: '/net/pf-pc27/scratch2/kitti'
+  batch_size: 1 
+  num_workers: 6
+  augment_noise: 0.01
+  augment_shift_range: 2.0 
+  augment_scale_max: 1.2
+  augment_scale_min: 0.8

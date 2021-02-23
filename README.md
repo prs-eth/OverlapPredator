@@ -7,7 +7,7 @@ This repository provides code and data required to train and evaluate PREDATOR, 
 |[ETH Zurich](https://igp.ethz.ch/) |\
 \* Equal contribution
 
-![Predator_teaser](figures/teaser_predator.jpg?raw=true)
+![Predator_teaser](assets/teaser_predator.jpg?raw=true)
 
 
 
@@ -37,6 +37,8 @@ cd cpp_wrappers; sh compile_wrappers.sh; cd ..
 in your working folder.
 
 ### Datasets and pretrained models
+For KITTI dataset, please follow the instruction on [KITTI Odometry website](http://www.cvlibs.net/datasets/kitti/eval_odometry.php) to download the KITTI odometry training set.
+
 We provide preprocessed 3DMatch pairwise datasets (voxel-grid subsampled fragments together with their ground truth transformation matrices), and two pretrained models on 3DMatch dataset. The preprocessed data and models can be downloaded by running:
 ```shell
 sh scripts/download_data_weight.sh
@@ -51,49 +53,58 @@ Predator is the model evaluated in the paper whereas bigPredator is a wider netw
 
 The results of both Predator and bigPredator, obtained using the evaluation protocol described in the paper, are available in the bottom table:
 
-<img src="figures/results.png" alt="results" width="500"/>
+<img src="assets/results.png" alt="results" width="450"/>
 
-**Note**: The pretrained models and processed data of ModelNet will be released in the following weeks. 
-
-### Train
+### 3DMatch(Indoor)
+#### Train
 After creating the virtual environment and downloading the datasets, Predator can be trained using:
 ```shell
-python main.py --mode train --exp_dir predator_3dmatch --first_feats_dim 128 --gnn_feats_dim 256
-```
-and biGPREDATOR using: 
-```shell
-python main.py --mode train --exp_dir bigpredator_3dmatch --first_feats_dim 256 --gnn_feats_dim 512
+python main.py configs/train/indoor.yaml
 ```
 
-### Evaluate
-To evaluate PREDATOR, the first step is to extract features and overlap/matachability scores by running: 
+#### Evaluate
+For 3DMatch, to reproduce Table 2 in our main paper, we first extract features and overlap/matachability scores by running: 
 ```shell
-python main.py --mode test --exp_dir predator_3dmatch --pretrain weights/Predator.pth --first_feats_dim 128 --gnn_feats_dim 256 --test_info 3DLoMatch
+python main.py configs/test/indoor.yaml
 ```
-the features will be saved to ```snapshot/{exp_dir}/{test_info}```. The estimation of the transformation parameters using RANSAC can then be carried out using:
+the features will be saved to ```snapshot/indoor/3DMatch```. The estimation of the transformation parameters using RANSAC can then be carried out using:
 ```shell
-python scripts/evaluate_predator.py --source_path snapshot/predator_3dmatch/3DLoMatch --n_points 1000 --benchmark 3DLoMatch --exp_dir est_3dlomatch_1000
+for N_POINTS in 250 500 1000 2500 5000
+do
+  python scripts/evaluate_predator.py --source_path snapshot/indoor/3DMatch --n_points $N_POINTS --benchmark 3DMatch
+done
 ```
-dependent on ```n_points``` used by RANSAC, this might take a few minutes. The final results are stored in ```est_{test_info}_{n_points}/result```. To evaluate PREDATOR on 3DMatch benchmark, simply replace 3DLoMatch by 3DMatch.
+dependent on ```n_points``` used by RANSAC, this might take a few minutes. The final results are stored in ```est_traj/{benchmark}/{n_points}/result```. To evaluate PREDATOR on 3DLoMatch benchmark, please also change ```3DMatch``` to ```3DLoMatch``` in ```configs/test/indoor.yaml```.
 
-### 
-### Demo
+#### Demo
 We prepared a small demo, which demonstrates the whole Predator pipeline using two random fragments from the 3DMatch dataset. To carry out the demo, please run:
 ```shell
-python scripts/demo.py
+python scripts/demo.py configs/test/indoor.yaml
 ```
 
 The demo script will visualize input point clouds, inferred overlap regions, and point cloud aligned with the estimated transformation parameters.
 
-### Citation
+### KITTI(Outdoor)
+We provide a small script to evaluate Predator on KITTI test set, after configuring KITTI dataset, please run:
+```
+python main.py configs/test/kitti.yaml
+```
+the results will be saved to the log file.
 
+### ModelNet(Synthetic)
+We provide a small script to evaluate Predator on ModelNet test set, please run:
+```
+python main.py configs/test/modelnet.yaml
+```
+
+### Citation
 If you find this code useful for your work or use it in your project, please consider citing:
 
 ```shell
 @article{huang2020predator,
   title={PREDATOR: Registration of 3D Point Clouds with Low Overlap},
   author={Shengyu Huang, Zan Gojcic, Mikhail Usvyatsov, Andreas Wieser, Konrad Schindler},
-  journal={arXiv:2011.13005 [cs.CV]},
+  journal={arXiv:2011.13005},
   year={2020}
 }
 ```
@@ -101,13 +112,12 @@ If you find this code useful for your work or use it in your project, please con
 ### Acknowledgments
 In this project we use (parts of) the official implementations of the followin works: 
 
-- [FCGF](https://github.com/chrischoy/FCGF)
-- [D3Feat](https://github.com/XuyangBai/D3Feat.pytorch)
-- [3DSmoothNet](https://github.com/zgojcic/3DSmoothNet)
-- [MultiviewReg](https://github.com/zgojcic/3D_multiview_reg)
-- [SuperGlue](https://github.com/magicleap/SuperGluePretrainedNetwork)
-- [DGCNN](https://github.com/WangYueFt/dgcnn)
-- [RPMNet](https://github.com/yewzijian/RPMNet)
-- [KPConv](https://github.com/HuguesTHOMAS/KPConv-PyTorch)
+- [FCGF](https://github.com/chrischoy/FCGF) (KITTI preprocessing)
+- [D3Feat](https://github.com/XuyangBai/D3Feat.pytorch) (KPConv backbone)
+- [3DSmoothNet](https://github.com/zgojcic/3DSmoothNet) (3DMatch preparation)
+- [MultiviewReg](https://github.com/zgojcic/3D_multiview_reg) (3DMatch benchmark)
+- [SuperGlue](https://github.com/magicleap/SuperGluePretrainedNetwork) (Transformer part)
+- [DGCNN](https://github.com/WangYueFt/dgcnn) (self-gnn)
+- [RPMNet](https://github.com/yewzijian/RPMNet) (ModelNet preprocessing and evaluation)
 
  We thank the respective authors for open sourcing their methods.

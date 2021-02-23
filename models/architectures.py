@@ -16,7 +16,7 @@ class KPFCNN(nn.Module):
         # Current radius of convolution and feature dimension
         layer = 0
         r = config.first_subsampling_dl * config.conv_radius
-        in_dim = config.in_features_dim
+        in_dim = config.in_feats_dim
         out_dim = config.first_feats_dim
         self.K = config.num_kernel_points
         self.epsilon = torch.nn.Parameter(torch.tensor(-5.0))
@@ -74,7 +74,7 @@ class KPFCNN(nn.Module):
         self.bottle = nn.Conv1d(in_dim, gnn_feats_dim,kernel_size=1,bias=True)
         k=config.dgcnn_k
         num_head = config.num_head
-        self.gnn = GCN(num_head,gnn_feats_dim, k, eval(config.nets))
+        self.gnn = GCN(num_head,gnn_feats_dim, k, config.nets)
         self.proj_gnn = nn.Conv1d(gnn_feats_dim,gnn_feats_dim,kernel_size=1, bias=True)
         self.proj_score = nn.Conv1d(gnn_feats_dim,1,kernel_size=1,bias=True)
 

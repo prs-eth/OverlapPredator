@@ -19,6 +19,7 @@ setup_seed(0)
 
 def benchmark_predator(feats_scores,n_points,exp_dir,whichbenchmark,ransac_with_mutual=False, inlier_ratio_threshold = 0.05):
     gt_folder = f'configs/benchmarks/{whichbenchmark}'
+    exp_dir = os.path.join(exp_dir,whichbenchmark,n_points)
     if(not os.path.exists(exp_dir)):
         os.makedirs(exp_dir)
     print(exp_dir)
@@ -108,7 +109,7 @@ if __name__=='__main__':
     parser.add_argument(
         '--n_points', default=1000, type=int, help='number of points used by RANSAC')
     parser.add_argument(
-        '--exp_dir', default='est_trajectory', type=str, help='export final results')
+        '--exp_dir', default='est_traj', type=str, help='export final results')
     args = parser.parse_args()
 
     feats_scores = sorted(glob.glob(f'{args.source_path}/*.pth'), key=natural_key)

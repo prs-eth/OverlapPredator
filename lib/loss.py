@@ -28,7 +28,7 @@ class MetricLoss(nn.Module):
 
         self.safe_radius = configs.safe_radius 
         self.matchability_radius = configs.matchability_radius
-        self.pos_radius = configs.pos_radius + 0.001 # just to take care of the numeric precision
+        self.pos_radius = configs.pos_radius # just to take care of the numeric precision
     
     def get_circle_loss(self, coords_dist, feats_dist):
         """
@@ -114,6 +114,19 @@ class MetricLoss(nn.Module):
         tgt_idx = list(set(correspondence[:,1].int().tolist()))
 
         #######################
+        # get BCE loss for overlap, here the ground truth label is obtained from correspondence information
+        src_gt = torch.zeros(src_pcd.size(0))
+        src_gt[src_idx]=1.
+        tgt_gt = torch.zeros(tgt_pcd.size(0))
+        tgt_gt[tgt_idx]=1.
+        gt_labels = torch.cat((src_gt, tgt_gt)).to(torch.device('cuda'))
+
+        class_loss, cls_precision, cls_recall = self.get_weighted_bce_loss(scores_overlap, gt_labels)
+        stats['overlap_loss'] = class_loss
+        stats['overlap_recall'] = cls_recall
+        stats['overlap_precision'] = cls_precision
+
+        #######################
         # get BCE loss for saliency part, here we only supervise points in the overlap region
         src_feats_sel, src_pcd_sel = src_feats[src_idx], src_pcd[src_idx]
         tgt_feats_sel, tgt_pcd_sel = tgt_feats[tgt_idx], tgt_pcd[tgt_idx]
@@ -134,21 +147,11 @@ class MetricLoss(nn.Module):
         stats['saliency_recall'] = cls_recall
         stats['saliency_precision'] = cls_precision
 
-        #######################
-        # get BCE loss for overlap, here the ground truth label is obtained from correspondence information
-        src_gt = torch.zeros(src_pcd.size(0))
-        src_gt[src_idx]=1.
-        tgt_gt = torch.zeros(tgt_pcd.size(0))
-        tgt_gt[tgt_idx]=1.
-        gt_labels = torch.cat((src_gt, tgt_gt)).to(torch.device('cuda'))
-
-        class_loss, cls_precision, cls_recall = self.get_weighted_bce_loss(scores_overlap, gt_labels)
-        stats['overlap_loss'] = class_loss
-        stats['overlap_recall'] = cls_recall
-        stats['overlap_precision'] = cls_precision
-
         #######################################
-        # filter some of correspondence
+        # filter some of correspondence as we are using different radius for "overlap" and "correspondence"
+        c_dist = torch.norm(src_pcd[correspondence[:,0]] - tgt_pcd[correspondence[:,1]], dim = 1)
+        c_select = c_dist < self.pos_radius - 0.001
+        correspondence = correspondence[c_select]
         if(correspondence.size(0) > self.max_points):
             choice = np.random.permutation(correspondence.size(0))[:self.max_points]
             correspondence = correspondence[choice]

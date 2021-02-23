@@ -8,36 +8,10 @@ import numpy as np
 from scipy.spatial.transform import Rotation
 from torch.utils.data import Dataset
 import open3d as o3d
-
-def get_correspondences(src_pcd, tgt_pcd, trans, search_voxel_size, K=None):
-    src_pcd.transform(trans)
-    pcd_tree = o3d.geometry.KDTreeFlann(tgt_pcd)
-
-    correspondences = []
-    for i, point in enumerate(src_pcd.points):
-        [count, idx, _] = pcd_tree.search_radius_vector_3d(point, search_voxel_size)
-        if K is not None:
-            idx = idx[:K]
-        for j in idx:
-            correspondences.append([i, j])
-    
-    correspondences = np.array(correspondences)
-    correspondences = torch.from_numpy(correspondences)
-    return correspondences
-
-def to_pcd(xyz):
-    pcd = o3d.geometry.PointCloud()
-    pcd.points = o3d.utility.Vector3dVector(xyz)
-    return pcd
-
-def to_tsfm(rot,trans):
-    tsfm = np.eye(4)
-    tsfm[:3,:3]=rot
-    tsfm[:3,3]=trans.flatten()
-    return tsfm
+from lib.benchmark_utils import to_o3d_pcd, to_tsfm, get_correspondences
 
 
-class ThreeDMatchDownsampled(Dataset):
+class IndoorDataset(Dataset):
     """
     Load subsampled coordinates, relative rotation and translation
     Output(torch.Tensor):
@@ -47,10 +21,10 @@ class ThreeDMatchDownsampled(Dataset):
         trans:          [3,1]
     """
     def __init__(self,infos,config,data_augmentation=True):
-        super(ThreeDMatchDownsampled,self).__init__()
+        super(IndoorDataset,self).__init__()
         self.infos = infos
         self.base_dir = config.root
-        self.pos_radius = config.pos_radius
+        self.overlap_radius = config.overlap_radius
         self.data_augmentation=data_augmentation
         self.config = config
         
@@ -101,11 +75,11 @@ class ThreeDMatchDownsampled(Dataset):
 
         # get correspondence at fine level
         tsfm = to_tsfm(rot, trans)
-        correspondences = get_correspondences(to_pcd(src_pcd), to_pcd(tgt_pcd), tsfm,self.pos_radius)
+        correspondences = get_correspondences(to_o3d_pcd(src_pcd), to_o3d_pcd(tgt_pcd), tsfm,self.overlap_radius)
             
         src_feats=np.ones_like(src_pcd[:,:1]).astype(np.float32)
         tgt_feats=np.ones_like(tgt_pcd[:,:1]).astype(np.float32)
         rot = rot.astype(np.float32)
         trans = trans.astype(np.float32)
         
-        return src_pcd,tgt_pcd,src_feats,tgt_feats,rot,trans, correspondences
+        return src_pcd,tgt_pcd,src_feats,tgt_feats,rot,trans, correspondences, src_pcd, tgt_pcd, torch.ones(1)

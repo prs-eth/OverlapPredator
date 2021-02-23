@@ -5,6 +5,10 @@ import torch
 import cpp_wrappers.cpp_subsampling.grid_subsampling as cpp_subsampling
 import cpp_wrappers.cpp_neighbors.radius_neighbors as cpp_neighbors
 from lib.timer import Timer
+from lib.utils import load_obj, natural_key
+from datasets.indoor import IndoorDataset
+from datasets.kitti import KITTIDataset
+from datasets.modelnet import get_train_datasets, get_test_datasets
 
 
 def batch_grid_subsampling_kpconv(points, batches_len, features=None, labels=None, sampleDl=0.1, max_p=0, verbose=0, random_grid_orient=True):
@@ -70,7 +74,7 @@ def collate_fn_descriptor(list_data, config, neighborhood_limits):
     batched_lengths_list = []
     assert len(list_data) == 1
     
-    for ind, (src_pcd,tgt_pcd,src_feats,tgt_feats,rot,trans,matching_inds) in enumerate(list_data):
+    for ind, (src_pcd,tgt_pcd,src_feats,tgt_feats,rot,trans,matching_inds, src_pcd_raw, tgt_pcd_raw, sample) in enumerate(list_data):
         batched_points_list.append(src_pcd)
         batched_points_list.append(tgt_pcd)
         batched_features_list.append(src_feats)
@@ -182,7 +186,10 @@ def collate_fn_descriptor(list_data, config, neighborhood_limits):
         'stack_lengths': input_batches_len,
         'rot': torch.from_numpy(rot),
         'trans': torch.from_numpy(trans),
-        'correspondences': matching_inds
+        'correspondences': matching_inds,
+        'src_pcd_raw': torch.from_numpy(src_pcd_raw).float(),
+        'tgt_pcd_raw': torch.from_numpy(tgt_pcd_raw).float(),
+        'sample': sample
     }
 
     return dict_inputs
@@ -220,6 +227,29 @@ def calibrate_neighbors(dataset, config, collate_fn, keep_ratio=0.8, samples_thr
     print('\n')
 
     return neighborhood_limits
+
+def get_datasets(config):
+    if(config.dataset=='indoor'):
+        info_train = load_obj(config.train_info)
+        info_val = load_obj(config.val_info)
+        info_benchmark = load_obj(f'configs/indoor/{config.benchmark}.pkl')
+
+        train_set = IndoorDataset(info_train,config,data_augmentation=True)
+        val_set = IndoorDataset(info_val,config,data_augmentation=False)
+        benchmark_set = IndoorDataset(info_benchmark,config, data_augmentation=False)
+    elif(config.dataset == 'kitti'):
+        train_set = KITTIDataset(config,'train',data_augmentation=True)
+        val_set = KITTIDataset(config,'val',data_augmentation=False)
+        benchmark_set = KITTIDataset(config, 'test',data_augmentation=False)
+    elif(config.dataset=='modelnet'):
+        train_set, val_set = get_train_datasets(config)
+        benchmark_set = get_test_datasets(config)
+    else:
+        raise NotImplementedError
+
+    return train_set, val_set, benchmark_set
+
+
 
 def get_dataloader(dataset, batch_size=1, num_workers=4, shuffle=True, neighborhood_limits=None):
     if neighborhood_limits is None:
