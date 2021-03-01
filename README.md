@@ -1,7 +1,7 @@
 ## PREDATOR: Registration of 3D Point Clouds with Low Overlap
 This repository provides code and data required to train and evaluate PREDATOR, a  model  for  **p**airwise point-cloud **re**gistration with **d**eep **at**tention to the **o**verlap **r**egion. It represents the official implementation of the paper:
 
-### [PREDATOR: Registration of 3D Point Clouds with Low Overlap](https://arxiv.org/abs/2011.13005)
+### [PREDATOR: Registration of 3D Point Clouds with Low Overlap (CVPR 2021)](https://arxiv.org/abs/2011.13005)
 
 \*[Shengyu Huang](https://shengyuh.github.io), \*[Zan Gojcic](https://zgojcic.github.io/), [Mikhail Usvyatsov](https://aelphy.github.io), [Andreas Wieser](https://gseg.igp.ethz.ch/people/group-head/prof-dr--andreas-wieser.html), [Konrad Schindler](https://prs.igp.ethz.ch/group/people/person-detail.schindler.html)\
 |[ETH Zurich](https://igp.ethz.ch/) | \* Equal contribution
@@ -114,8 +114,8 @@ If you find this code useful for your work or use it in your project, please con
 @article{huang2020predator,
   title={PREDATOR: Registration of 3D Point Clouds with Low Overlap},
   author={Shengyu Huang, Zan Gojcic, Mikhail Usvyatsov, Andreas Wieser, Konrad Schindler},
-  journal={arXiv:2011.13005},
-  year={2020}
+  journal={CVPR},
+  year={2021}
 }
 ```
 
