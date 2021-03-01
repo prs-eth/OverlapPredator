@@ -87,7 +87,10 @@ def to_array(tensor):
     Conver tensor to array
     """
     if(not isinstance(tensor,np.ndarray)):
-        return tensor.cpu().numpy()
+        if(tensor.device == torch.device('cpu')):
+            return tensor.numpy()
+        else:
+            return tensor.cpu().numpy()
     else:
         return tensor
 

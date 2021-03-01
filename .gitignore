@@ -1,7 +1,9 @@
 snapshot/
+scripts.py
 *.so
 *.zip
 data/
 weights/
 __pycache__/
 build/
+dump/

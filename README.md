@@ -4,8 +4,9 @@ This repository provides code and data required to train and evaluate PREDATOR, 
 ### [PREDATOR: Registration of 3D Point Clouds with Low Overlap](https://arxiv.org/abs/2011.13005)
 
 \*[Shengyu Huang](https://shengyuh.github.io), \*[Zan Gojcic](https://zgojcic.github.io/), [Mikhail Usvyatsov](https://aelphy.github.io), [Andreas Wieser](https://gseg.igp.ethz.ch/people/group-head/prof-dr--andreas-wieser.html), [Konrad Schindler](https://prs.igp.ethz.ch/group/people/person-detail.schindler.html)\
-|[ETH Zurich](https://igp.ethz.ch/) |\
-\* Equal contribution
+|[ETH Zurich](https://igp.ethz.ch/) | \* Equal contribution
+
+For more information, please see the [project website](https://overlappredator.github.io)
 
 ![Predator_teaser](assets/teaser_predator.jpg?raw=true)
 
@@ -17,6 +18,7 @@ If you have any questions, please let us know:
 - Zan Gojcic {zan.gojcic@geod.baug.ethz.ch}
 
 ## News
+- 2021-02-28: MinkowskiEngine-based PREDATOR [release](https://github.com/ShengyuH/OverlapPredator.Mink.git)
 - 2021-02-23: Modelnet and KITTI release
 - 2020-11-30: Code and paper release
 
@@ -24,7 +26,7 @@ If you have any questions, please let us know:
 This code has been tested on 
 - Python 3.8.5, PyTorch 1.7.1, CUDA 11.2, gcc 9.3.0, GeForce RTX 3090/GeForce GTX 1080Ti
 
-**Note**: We observe random data loader crashes due to memory issues, if you observe similar issues, please consider reducing the number of workers or increasing CPU RAM. We are working on releasing a sparse convolution-based Predator, stay tuned! 
+**Note**: We observe random data loader crashes due to memory issues, if you observe similar issues, please consider reducing the number of workers or increasing CPU RAM. We now released a sparse convolution-based Predator, have a look [here](https://github.com/ShengyuH/OverlapPredator.Mink.git)!
 
 ### Requirements
 To create a virtual environment and install the required dependences please run:
@@ -35,7 +37,6 @@ cd OverlapPredator; pip install -r requirements.txt
 cd cpp_wrappers; sh compile_wrappers.sh; cd ..
 ```
 in your working folder.
-**Note**: For Python 3.8.5, please replace ```virtualenv --no-site-packages predator -p python3``` with ```virtualenv predator```. 
 
 ### Datasets and pretrained models
 For KITTI dataset, please follow the instruction on [KITTI Odometry website](http://www.cvlibs.net/datasets/kitti/eval_odometry.php) to download the KITTI odometry training set.

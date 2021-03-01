@@ -59,7 +59,7 @@ optimiser:
 dataset:
   dataset: kitti
   benchmark: odometryKITTI
-  root: '/net/pf-pc27/scratch2/kitti'
+  root: /net/pf-pc27/scratch2/kitti
   batch_size: 1 
   num_workers: 6
   augment_noise: 0.01

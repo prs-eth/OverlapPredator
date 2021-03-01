@@ -19,7 +19,7 @@ setup_seed(0)
 
 def benchmark_predator(feats_scores,n_points,exp_dir,whichbenchmark,ransac_with_mutual=False, inlier_ratio_threshold = 0.05):
     gt_folder = f'configs/benchmarks/{whichbenchmark}'
-    exp_dir = os.path.join(exp_dir,whichbenchmark,n_points)
+    exp_dir = os.path.join(exp_dir,whichbenchmark,str(n_points))
     if(not os.path.exists(exp_dir)):
         os.makedirs(exp_dir)
     print(exp_dir)
