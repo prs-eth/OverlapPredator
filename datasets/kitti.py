@@ -82,23 +82,6 @@ class KITTIDataset(Dataset):
             self.files.remove((8, 15, 58))
         print(f'Num_{split}: {len(self.files)}')
 
-            # #######################################
-            # # Predator script to generate test pairs
-            # # use minimum and maximum to threshold the pairs
-            # thresholding = (pdist > self.min_dist) & (pdist < self.max_dist)
-
-            # curr_time = inames[0]
-            # while curr_time in inames: # we consider every 4 frames that fullfill our thresholding
-            #     next_times = np.where(thresholding[curr_time][curr_time:curr_time + 100])[0].tolist()
-            #     if len(next_times) == 0:
-            #         curr_time += 1
-            #     else:
-            #         next_time = next_times[0] + curr_time - 1
-            #         if next_time in inames:
-            #             self.files.append((drive_id, curr_time, next_time))
-            #             curr_time = next_time + 1
-
-
 
     def __len__(self):
         return len(self.files)

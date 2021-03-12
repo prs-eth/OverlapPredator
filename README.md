@@ -1,10 +1,12 @@
-## PREDATOR: Registration of 3D Point Clouds with Low Overlap (CVPR 2021)
-This repository provides code and data required to train and evaluate PREDATOR, a  model  for  **p**airwise point-cloud **re**gistration with **d**eep **at**tention to the **o**verlap **r**egion. It represents the official implementation of the paper:
+## PREDATOR: Registration of 3D Point Clouds with Low Overlap (CVPR 2021, Oral)
+This repository represents the official implementation of the paper:
 
 ### [PREDATOR: Registration of 3D Point Clouds with Low Overlap](https://arxiv.org/abs/2011.13005)
 
 \*[Shengyu Huang](https://shengyuh.github.io), \*[Zan Gojcic](https://zgojcic.github.io/), [Mikhail Usvyatsov](https://aelphy.github.io), [Andreas Wieser](https://gseg.igp.ethz.ch/people/group-head/prof-dr--andreas-wieser.html), [Konrad Schindler](https://prs.igp.ethz.ch/group/people/person-detail.schindler.html)\
 |[ETH Zurich](https://igp.ethz.ch/) | \* Equal contribution
+
+For implementation using MinkowskiEngine backbone, please check [this](https://github.com/ShengyuH/OverlapPredator.Mink)
 
 For more information, please see the [project website](https://overlappredator.github.io)
 
@@ -130,4 +132,4 @@ In this project we use (parts of) the official implementations of the followin w
 - [DGCNN](https://github.com/WangYueFt/dgcnn) (self-gnn)
 - [RPMNet](https://github.com/yewzijian/RPMNet) (ModelNet preprocessing and evaluation)
 
- We thank the respective authors for open sourcing their methods.
+ We thank the respective authors for open sourcing their methods. We would also like to thank reviewers, especially reviewer 2 for his/her valuable inputs. 
