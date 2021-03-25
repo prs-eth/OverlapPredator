@@ -20,6 +20,7 @@ If you have any questions, please let us know:
 - Zan Gojcic {zan.gojcic@geod.baug.ethz.ch}
 
 ## News
+- 2021-03-25: Camera ready is on arXiv! I also gave a talk on Predator, you can find the recording here: [Bilibili](https://www.bilibili.com/video/BV1UK4y1U7Gs), [Youtube](https://www.youtube.com/watch?v=AZQGJa6R_4I&t=1563s) 
 - 2021-02-28: MinkowskiEngine-based PREDATOR [release](https://github.com/ShengyuH/OverlapPredator.Mink.git)
 - 2021-02-23: Modelnet and KITTI release
 - 2020-11-30: Code and paper release
