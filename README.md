@@ -20,7 +20,7 @@ If you have any questions, please let us know:
 - Zan Gojcic {zan.gojcic@geod.baug.ethz.ch}
 
 ## News
-- 2021-03-25: Camera ready is on arXiv! I also gave a talk on Predator, you can find the recording here: [Bilibili](https://www.bilibili.com/video/BV1UK4y1U7Gs), [Youtube](https://www.youtube.com/watch?v=AZQGJa6R_4I&t=1563s) 
+- 2021-03-25: Camera ready is on arXiv! I also gave a talk on Predator(中文), you can find the recording here: [Bilibili](https://www.bilibili.com/video/BV1UK4y1U7Gs), [Youtube](https://www.youtube.com/watch?v=AZQGJa6R_4I&t=1563s) 
 - 2021-02-28: MinkowskiEngine-based PREDATOR [release](https://github.com/ShengyuH/OverlapPredator.Mink.git)
 - 2021-02-23: Modelnet and KITTI release
 - 2020-11-30: Code and paper release
@@ -110,14 +110,21 @@ python main.py configs/test/modelnet.yaml
 ```
 The rotation and translation errors could be better/worse than the reported ones due to randomness in RANSAC. 
 
+
+### Custom dataset
+We have a few tips for train/test on custom dataset
+
+- If it's similar indoor scenes, please run ```demo.py``` first to check the generalisation ability before retraining
+- Remember to voxel-downsample the data in your data loader, see ```kitti.py``` for reference 
+
 ### Citation
 If you find this code useful for your work or use it in your project, please consider citing:
 
 ```shell
-@article{huang2020predator,
+@inproceedings{huang2020predator,
   title={PREDATOR: Registration of 3D Point Clouds with Low Overlap},
   author={Shengyu Huang, Zan Gojcic, Mikhail Usvyatsov, Andreas Wieser, Konrad Schindler},
-  journal={CVPR},
+  booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
   year={2021}
 }
 ```
