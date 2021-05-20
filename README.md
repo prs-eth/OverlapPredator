@@ -46,6 +46,7 @@ For KITTI dataset, please follow the instruction on [KITTI Odometry website](htt
 
 We provide 
 - preprocessed 3DMatch pairwise datasets (voxel-grid subsampled fragments together with their ground truth transformation matrices)
+- raw dense 3DMatch datasets
 - modelnet dataset
 - pretrained models on 3DMatch, KITTI and Modelnet
 
@@ -53,6 +54,26 @@ The preprocessed data and models can be downloaded by running:
 ```shell
 sh scripts/download_data_weight.sh
 ```
+
+To download raw dense 3DMatch data, please run:
+```shell
+wget --no-check-certificate --show-progress https://share.phys.ethz.ch/~gsg/pairwise_reg/3dmatch.zip
+unzip 3dmatch.zip
+```
+
+The folder is organised as follows:
+
+- `3dmatch`
+    - `train`
+        - `7-scenes-chess`
+            - `fragments`
+                - `cloud_bin_*.ply`
+                - ...
+            - `poses`
+                - `cloud_bin_*.txt`
+                - ...
+        - ...
+    - `test`
 
 Predator is the model evaluated in the paper whereas bigPredator is a wider network that is trained on a single GeForce RTX 3090. 
 
@@ -121,10 +142,10 @@ We have a few tips for train/test on custom dataset
 If you find this code useful for your work or use it in your project, please consider citing:
 
 ```shell
-@inproceedings{huang2020predator,
+@inproceedings{predator,
   title={PREDATOR: Registration of 3D Point Clouds with Low Overlap},
-  author={Shengyu Huang, Zan Gojcic, Mikhail Usvyatsov, Andreas Wieser, Konrad Schindler},
-  booktitle={Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition},
+  author={Shengyu Huang and Zan Gojcic and Mikhail Usvyatsov and Andreas Wieser, Konrad Schindler},
+  booktitle={IEEE Conference on Computer Vision and Pattern Recognition, CVPR},
   year={2021}
 }
 ```
