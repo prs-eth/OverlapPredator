@@ -1,11 +1,11 @@
 misc:
-  exp_dir: indoor
+  exp_dir: indoor_fix
   mode: test
   gpu_mode: True
   verbose: True
   verbose_freq: 1000
   snapshot_freq: 1
-  pretrain: 'weights/indoor_predator.pth'
+  pretrain: 'snapshot/fix_gnn/checkpoints/model_best_recall.pth'
 
 
 model:
@@ -68,7 +68,9 @@ dataset:
   val_info: configs/indoor/val_info.pkl
 
 demo:
-  src_pcd: assets/cloud_bin_21.pth
-  tgt_pcd: assets/cloud_bin_34.pth
+  # src_pcd: assets/cloud_bin_21.pth
+  # tgt_pcd: assets/cloud_bin_34.pth
+  src_pcd: ../dataset_sample/Bldg_1_Stg_3_Chunk_2_3_0/3.npz.ply
+  tgt_pcd: ../dataset_sample/Bldg_1_Stg_3_Chunk_2_3_0/1.npz.ply
   n_points: 1000
 

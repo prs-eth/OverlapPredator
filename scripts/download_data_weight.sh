@@ -1,8 +1,6 @@
-wget --no-check-certificate --show-progress https://share.phys.ethz.ch/~gsg/Predator/predator.zip
-unzip predator.zip
-mv predator/data .
-mv predator/weights .
-rm -r predator
-rm predator.zip
-cp assets/cloud_bin_21.pth data/indoor/test/7-scenes-redkitchen
-cp assets/cloud_bin_34.pth data/indoor/test/7-scenes-redkitchen
+wget --no-check-certificate --show-progress https://share.phys.ethz.ch/~gsg/Predator/data.zip
+wget --no-check-certificate --show-progress https://share.phys.ethz.ch/~gsg/Predator/weights.zip
+unzip data.zip
+unzip weights.zip
+rm data.zip
+rm weights.zip

@@ -20,10 +20,15 @@ If you have any questions, please let us know:
 - Zan Gojcic {zan.gojcic@geod.baug.ethz.ch}
 
 ## News
+- 2021-06-02: Fix feature gathering bug in k-nn graph, please see improved performance bellow. Stay tunned for updates on other experiments!
+- 2021-05-31: Check our video and poster on [project page](https://overlappredator.github.io)! 
 - 2021-03-25: Camera ready is on arXiv! I also gave a talk on Predator(中文), you can find the recording here: [Bilibili](https://www.bilibili.com/video/BV1UK4y1U7Gs), [Youtube](https://www.youtube.com/watch?v=AZQGJa6R_4I&t=1563s) 
 - 2021-02-28: MinkowskiEngine-based PREDATOR [release](https://github.com/ShengyuH/OverlapPredator.Mink.git)
 - 2021-02-23: Modelnet and KITTI release
 - 2020-11-30: Code and paper release
+
+<img src="assets/fix_knn_feats.png" alt="results" width="500"/>
+
 
 ## Instructions
 This code has been tested on 
@@ -34,7 +39,7 @@ This code has been tested on
 ### Requirements
 To create a virtual environment and install the required dependences please run:
 ```shell
-git clone https://github.com/ShengyuH/OverlapPredator.git
+git clone https://github.com/overlappredator/OverlapPredator.git
 virtualenv predator; source predator/bin/activate
 cd OverlapPredator; pip install -r requirements.txt
 cd cpp_wrappers; sh compile_wrappers.sh; cd ..
