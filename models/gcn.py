@@ -23,7 +23,7 @@ def get_graph_feature(coords, feats, k=10):
     idx = idx[:,:,1:]  #[B, N, K]
 
     idx = idx.unsqueeze(1).repeat(1,C,1,1) #[B, C, N, K]
-    all_feats = feats.unsqueeze(-1).repeat(1,1,1,N)  #[B, C, N, N]
+    all_feats = feats.unsqueeze(2).repeat(1, 1, N, 1)  # [B, C, N, N]
 
     neighbor_feats = torch.gather(all_feats, dim=-1,index=idx) #[B, C, N, K]
 
