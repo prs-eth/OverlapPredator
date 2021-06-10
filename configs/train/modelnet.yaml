@@ -1,21 +1,20 @@
 misc:
-  exp_dir: indoor
-  mode: test
+  exp_dir: modelnet
+  mode: train
   gpu_mode: True
   verbose: True
   verbose_freq: 1000
   snapshot_freq: 1
-  pretrain: 'weights/indoor.pth'
-
+  pretrain: ''
 
 model:
-  num_layers: 4 
+  num_layers: 3 
   in_points_dim: 3
-  first_feats_dim: 128
-  final_feats_dim: 32
-  first_subsampling_dl: 0.025
+  first_feats_dim: 512
+  final_feats_dim: 96
+  first_subsampling_dl: 0.06
   in_feats_dim: 1
-  conv_radius: 2.5
+  conv_radius: 2.75
   deform_radius: 5.0 
   num_kernel_points: 15
   KP_extent: 2.0
@@ -38,39 +37,42 @@ overlap_attention_module:
 loss:
   pos_margin: 0.1
   neg_margin: 1.4
-  log_scale: 24
-  pos_radius: 0.0375
-  safe_radius: 0.1
-  overlap_radius: 0.0375
-  matchability_radius: 0.05 
+  log_scale: 64
+  pos_radius: 0.018
+  safe_radius: 0.06
+  overlap_radius: 0.04
+  matchability_radius: 0.04 
   w_circle_loss: 1.0
   w_overlap_loss: 1.0
   w_saliency_loss: 0.0
-  max_points: 256
+  max_points: 384
 
 optimiser:
   optimizer: SGD
-  max_epoch: 40
-  lr: 0.005
+  max_epoch: 200
+  lr: 0.01
   weight_decay: 0.000001
   momentum: 0.98
   scheduler: ExpLR
-  scheduler_gamma: 0.95
+  scheduler_gamma: 0.99
   scheduler_freq: 1
-  iter_size: 1
+  iter_size: 4
 
 dataset:
-  dataset: indoor
-  benchmark: 3DMatch
-  root: data/indoor
+  dataset: modelnet
+  benchmark: modelnet
+  root: data/modelnet40_ply_hdf5_2048
   batch_size: 1 
-  num_workers: 6 
+  num_workers: 4 
   augment_noise: 0.005
-  train_info: configs/indoor/train_info.pkl
-  val_info: configs/indoor/val_info.pkl
+  train_categoryfile: configs/modelnet/modelnet40_half1.txt
+  val_categoryfile: configs/modelnet/modelnet40_half1.txt
+  test_categoryfile: configs/modelnet/modelnet40_half2.txt
+  partial: [0.7,0.7]
+  num_points: 1024
+  noise_type: crop
+  rot_mag: 45.0
+  trans_mag: 0.5 
+  dataset_type: modelnet_hdf
 
-demo:
-  src_pcd: assets/cloud_bin_21.pth
-  tgt_pcd: assets/cloud_bin_34.pth
-  n_points: 1000
 

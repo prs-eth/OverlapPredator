@@ -21,6 +21,8 @@ class KPFCNN(nn.Module):
         self.K = config.num_kernel_points
         self.epsilon = torch.nn.Parameter(torch.tensor(-5.0))
         self.final_feats_dim = config.final_feats_dim
+        self.condition = config.condition_feature
+        self.add_cross_overlap = config.add_cross_score
 
         #####################
         # List Encoder blocks
@@ -82,7 +84,10 @@ class KPFCNN(nn.Module):
         #####################
         # List Decoder blocks
         #####################
-        out_dim = gnn_feats_dim + 2
+        if self.add_cross_overlap:
+            out_dim = gnn_feats_dim + 2
+        else:
+            out_dim = gnn_feats_dim + 1
 
         # Save all block operations in a list of modules
         self.decoder_blocks = nn.ModuleList()
@@ -150,6 +155,7 @@ class KPFCNN(nn.Module):
         # 2. project the bottleneck features
         feats_c = x.transpose(0,1).unsqueeze(0)  #[1, C, N]
         feats_c = self.bottle(feats_c)  #[1, C, N]
+        unconditioned_feats = feats_c.transpose(1,2).squeeze(0)
 
         #################################
         # 3. apply GNN to communicate the features and get overlap score
@@ -175,7 +181,15 @@ class KPFCNN(nn.Module):
         s1 = torch.matmul(F.softmax(inner_products / temperature ,dim=1) ,tgt_scores_c)
         s2 = torch.matmul(F.softmax(inner_products.transpose(0,1) / temperature,dim=1),src_scores_c)
         scores_saliency = torch.cat((s1,s2),dim=0)
-        x = torch.cat([scores_c_raw,scores_saliency,feats_gnn_raw], dim=1)
+        
+        if(self.condition and self.add_cross_overlap): 
+            x = torch.cat([scores_c_raw,scores_saliency,feats_gnn_raw], dim=1)
+        elif(self.condition and not self.add_cross_overlap):
+            x = torch.cat([scores_c_raw,feats_gnn_raw], dim=1)
+        elif(not self.condition and self.add_cross_overlap):
+            x = torch.cat([scores_c_raw, scores_saliency, unconditioned_feats], dim = 1)
+        elif(not self.condition and not self.add_cross_overlap):
+            x = torch.cat([scores_c_raw, unconditioned_feats], dim = 1)
     
         for block_i, block_op in enumerate(self.decoder_blocks):
             if block_i in self.decoder_concats:

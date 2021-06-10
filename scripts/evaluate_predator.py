@@ -17,9 +17,31 @@ from lib.benchmark import read_trajectory, write_trajectory, benchmark
 import argparse
 setup_seed(0)
 
-def benchmark_predator(feats_scores,n_points,exp_dir,whichbenchmark,ransac_with_mutual=False, inlier_ratio_threshold = 0.05):
+def sample_interest_points(method, scores, N):
+    """
+    We can do random sampling, probabilistic sampling, or top-k sampling
+    """
+    assert method in ['prob','topk', 'random']
+    n = scores.size(0)
+    if n < N:
+        choice = np.random.choice(n, N)
+    else:
+        if method == 'random':
+            choice = np.random.permutation(n)[:N]
+        elif method =='topk':
+            choice = torch.topk(scores, N, dim=0)[1]
+        elif method =='prob':
+            idx = np.arange(n)
+            probs = (scores / scores.sum()).numpy().flatten()
+            choice = np.random.choice(idx, size= N, replace=False, p=probs)
+    
+    return choice
+
+
+
+def benchmark_predator(feats_scores,n_points,exp_dir,whichbenchmark,sample_method,ransac_with_mutual=False, inlier_ratio_threshold = 0.05):
     gt_folder = f'configs/benchmarks/{whichbenchmark}'
-    exp_dir = os.path.join(exp_dir,whichbenchmark,str(n_points))
+    exp_dir = f'{exp_dir}/{whichbenchmark}_{n_points}_{sample_method}'
     if(not os.path.exists(exp_dir)):
         os.makedirs(exp_dir)
     print(exp_dir)
@@ -50,17 +72,13 @@ def benchmark_predator(feats_scores,n_points,exp_dir,whichbenchmark,ransac_with_
         src_scores = src_overlap * src_saliency
         tgt_scores = tgt_overlap * tgt_saliency
 
-        if(src_pcd.size(0) > n_points):
-            idx = np.arange(src_pcd.size(0))
-            probs = (src_scores / src_scores.sum()).numpy().flatten()
-            idx = np.random.choice(idx, size= n_points, replace=False, p=probs)
-            src_pcd, src_feats = src_pcd[idx], src_feats[idx]
-        if(tgt_pcd.size(0) > n_points):
-            idx = np.arange(tgt_pcd.size(0))
-            probs = (tgt_scores / tgt_scores.sum()).numpy().flatten()
-            idx = np.random.choice(idx, size= n_points, replace=False, p=probs)
-            tgt_pcd, tgt_feats = tgt_pcd[idx], tgt_feats[idx]
 
+        src_idx = sample_interest_points(sample_method, src_scores,n_points)
+        tgt_idx = sample_interest_points(sample_method, tgt_scores,n_points)
+
+        src_pcd, src_feats = src_pcd[src_idx], src_feats[src_idx]
+        tgt_pcd, tgt_feats = tgt_pcd[tgt_idx], tgt_feats[tgt_idx]
+        
         ########################################
         # 3. run ransac
         tsfm_est.append(ransac_pose_estimation(src_pcd, tgt_pcd, src_feats, tgt_feats, mutual=ransac_with_mutual))
@@ -110,8 +128,10 @@ if __name__=='__main__':
         '--n_points', default=1000, type=int, help='number of points used by RANSAC')
     parser.add_argument(
         '--exp_dir', default='est_traj', type=str, help='export final results')
+    parser.add_argument(
+        '--sampling', default='prob', type = str, help='interest point sampling')
     args = parser.parse_args()
 
     feats_scores = sorted(glob.glob(f'{args.source_path}/*.pth'), key=natural_key)
 
-    benchmark_predator(feats_scores, args.n_points, args.exp_dir, args.benchmark)
+    benchmark_predator(feats_scores, args.n_points, args.exp_dir, args.benchmark, args.sampling)

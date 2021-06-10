@@ -181,6 +181,8 @@ class Trainer(object):
             for k, v in inputs.items():  
                 if type(v) == list:
                     inputs[k] = [item.to(self.device) for item in v]
+                elif type(v) == dict:
+                    pass
                 else:
                     inputs[k] = v.to(self.device)
             try:

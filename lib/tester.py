@@ -311,56 +311,58 @@ class ModelnetTester(Trainer):
         with torch.no_grad():
             for idx in tqdm(range(num_iter)): # loop through this epoch
                 inputs = c_loader_iter.next()
+                try:
+                    ##################################
+                    # load inputs to device.
+                    for k, v in inputs.items():  
+                        if type(v) == list:
+                            inputs[k] = [item.to(self.device) for item in v]
+                        elif type(v) == dict:
+                            pass
+                        else:
+                            inputs[k] = v.to(self.device)
 
-                ##################################
-                # load inputs to device.
-                for k, v in inputs.items():  
-                    if type(v) == list:
-                        inputs[k] = [item.to(self.device) for item in v]
-                    elif type(v) == dict:
-                        pass
-                    else:
-                        inputs[k] = v.to(self.device)
+                    rot_trace = inputs['sample']['transform_gt'][:, 0, 0] + inputs['sample']['transform_gt'][:, 1, 1] + \
+                            inputs['sample']['transform_gt'][:, 2, 2]
+                    rotdeg = torch.acos(torch.clamp(0.5 * (rot_trace - 1), min=-1.0, max=1.0)) * 180.0 / np.pi
+                    total_rotation.append(np.abs(to_array(rotdeg)))
 
-                rot_trace = inputs['sample']['transform_gt'][:, 0, 0] + inputs['sample']['transform_gt'][:, 1, 1] + \
-                        inputs['sample']['transform_gt'][:, 2, 2]
-                rotdeg = torch.acos(torch.clamp(0.5 * (rot_trace - 1), min=-1.0, max=1.0)) * 180.0 / np.pi
-                total_rotation.append(np.abs(to_array(rotdeg)))
+                    ###################################
+                    # forward pass
+                    feats, scores_overlap, scores_saliency = self.model(inputs)  #[N1, C1], [N2, C2]
+                    scores_overlap = scores_overlap.detach().cpu()
+                    scores_saliency = scores_saliency.detach().cpu()
 
-                ###################################
-                # forward pass
-                feats, scores_overlap, scores_saliency = self.model(inputs)  #[N1, C1], [N2, C2]
-                scores_overlap = scores_overlap.detach().cpu()
-                scores_saliency = scores_saliency.detach().cpu()
+                    len_src = inputs['stack_lengths'][0][0]
+                    src_feats, tgt_feats = feats[:len_src], feats[len_src:]
+                    src_pcd , tgt_pcd = inputs['src_pcd_raw'], inputs['tgt_pcd_raw']
+                    src_overlap, tgt_overlap = scores_overlap[:len_src], scores_overlap[len_src:]
+                    src_saliency, tgt_saliency = scores_saliency[:len_src], scores_saliency[len_src:]
 
-                len_src = inputs['stack_lengths'][0][0]
-                src_feats, tgt_feats = feats[:len_src], feats[len_src:]
-                src_pcd , tgt_pcd = inputs['src_pcd_raw'], inputs['tgt_pcd_raw']
-                src_overlap, tgt_overlap = scores_overlap[:len_src], scores_overlap[len_src:]
-                src_saliency, tgt_saliency = scores_saliency[:len_src], scores_saliency[len_src:]
+                    
+                    ########################################
+                    # run probabilistic sampling
+                    n_points = 450
+                    src_scores = src_overlap * src_saliency
+                    tgt_scores = tgt_overlap * tgt_saliency
 
-                
-                ########################################
-                # run probabilistic sampling
-                n_points = 450
-                src_scores = src_overlap * src_saliency
-                tgt_scores = tgt_overlap * tgt_saliency
+                    if(src_pcd.size(0) > n_points):
+                        idx = np.arange(src_pcd.size(0))
+                        probs = (src_scores / src_scores.sum()).numpy().flatten()
+                        idx = np.random.choice(idx, size= n_points, replace=False, p=probs)
+                        src_pcd, src_feats = src_pcd[idx], src_feats[idx]
+                    if(tgt_pcd.size(0) > n_points):
+                        idx = np.arange(tgt_pcd.size(0))
+                        probs = (tgt_scores / tgt_scores.sum()).numpy().flatten()
+                        idx = np.random.choice(idx, size= n_points, replace=False, p=probs)
+                        tgt_pcd, tgt_feats = tgt_pcd[idx], tgt_feats[idx]
 
-                if(src_pcd.size(0) > n_points):
-                    idx = np.arange(src_pcd.size(0))
-                    probs = (src_scores / src_scores.sum()).numpy().flatten()
-                    idx = np.random.choice(idx, size= n_points, replace=False, p=probs)
-                    src_pcd, src_feats = src_pcd[idx], src_feats[idx]
-                if(tgt_pcd.size(0) > n_points):
-                    idx = np.arange(tgt_pcd.size(0))
-                    probs = (tgt_scores / tgt_scores.sum()).numpy().flatten()
-                    idx = np.random.choice(idx, size= n_points, replace=False, p=probs)
-                    tgt_pcd, tgt_feats = tgt_pcd[idx], tgt_feats[idx]
-
-                ########################################
-                # run ransac 
-                distance_threshold = 0.02
-                ts_est = ransac_pose_estimation(src_pcd, tgt_pcd, src_feats, tgt_feats, mutual=False, distance_threshold=distance_threshold, ransac_n = 3)
+                    ########################################
+                    # run ransac 
+                    distance_threshold = 0.025
+                    ts_est = ransac_pose_estimation(src_pcd, tgt_pcd, src_feats, tgt_feats, mutual=False, distance_threshold=distance_threshold, ransac_n = 3)
+                except: # sometimes we left over with too few points in the bottleneck and our k-nn graph breaks
+                    ts_est = np.eye(4)
                 pred_transforms.append(ts_est)
 
 

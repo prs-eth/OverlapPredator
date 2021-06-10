@@ -1,17 +1,17 @@
 misc:
-  exp_dir: fix_gnn
+  exp_dir: indoor
   mode: train
   gpu_mode: True
   verbose: True
   verbose_freq: 1000
   snapshot_freq: 1
-  pretrain: 'snapshot/fix_gnn/checkpoints/model_best_loss.pth'
+  pretrain: ''
 
 
 model:
   num_layers: 4 
   in_points_dim: 3
-  first_feats_dim: 128
+  first_feats_dim: 256
   final_feats_dim: 32
   first_subsampling_dl: 0.025
   in_feats_dim: 1
@@ -26,9 +26,11 @@ model:
   batch_norm_momentum: 0.02
   deformable: False
   modulated: False 
+  add_cross_score: True
+  condition_feature: True
 
 overlap_attention_module:
-  gnn_feats_dim: 256 
+  gnn_feats_dim: 512
   dgcnn_k: 10
   num_head: 4
   nets: ['self','cross','self']

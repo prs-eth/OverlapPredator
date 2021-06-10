@@ -41,7 +41,7 @@ def print_info(opt, log_dir=None):
     # Arguments
     arg_str = ['{}: {}'.format(key, value) for key, value in vars(opt).items()]
     arg_str = ', '.join(arg_str)
-    _logger.info('Arguments: {}'.format(arg_str))
+    #_logger.info('Arguments: {}'.format(arg_str))
 
 
 def prepare_logger(opt: argparse.Namespace, log_path: str = None):

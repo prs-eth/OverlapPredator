@@ -15,3 +15,7 @@ PyYAML==5.4.1
 scikit_learn==0.24.1
 tensorboardX==2.1
 vtk_visualizer==0.9.6
+nibabel==3,2,1
+h5py==3.2.1
+coloredlogs==15.0
+gitpython==3.1.17

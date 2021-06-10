@@ -20,14 +20,11 @@ If you have any questions, please let us know:
 - Zan Gojcic {zan.gojcic@geod.baug.ethz.ch}
 
 ## News
-- 2021-06-02: Fix feature gathering bug in k-nn graph, please see improved performance bellow. Stay tunned for updates on other experiments!
+- 2021-06-02: Fix feature gathering bug in k-nn graph, please see improved performance in this [issue](https://github.com/overlappredator/OverlapPredator/issues/15). Stay tunned for updates on other experiments!
 - 2021-05-31: Check our video and poster on [project page](https://overlappredator.github.io)! 
 - 2021-03-25: Camera ready is on arXiv! I also gave a talk on Predator(中文), you can find the recording here: [Bilibili](https://www.bilibili.com/video/BV1UK4y1U7Gs), [Youtube](https://www.youtube.com/watch?v=AZQGJa6R_4I&t=1563s) 
 - 2021-02-28: MinkowskiEngine-based PREDATOR [release](https://github.com/ShengyuH/OverlapPredator.Mink.git)
-- 2021-02-23: Modelnet and KITTI release
 - 2020-11-30: Code and paper release
-
-<img src="assets/fix_knn_feats.png" alt="results" width="500"/>
 
 
 ## Instructions
@@ -80,17 +77,6 @@ The folder is organised as follows:
         - ...
     - `test`
 
-Predator is the model evaluated in the paper whereas bigPredator is a wider network that is trained on a single GeForce RTX 3090. 
-
-| Model       | first_feats_dim   | gnn_feats_dim | # parameters|
-|:-----------:|:-------------------:|:-------:|:-------:|
-| Predator | 128               | 256 | 7.43M|
-| bigPredator | 256                | 512 | 29.67M|
-
-The results of both Predator and bigPredator, obtained using the evaluation protocol described in the paper, are available in the bottom table:
-
-<img src="assets/results.png" alt="results" width="450"/>
-
 ### 3DMatch(Indoor)
 #### Train
 After creating the virtual environment and downloading the datasets, Predator can be trained using:
@@ -103,14 +89,14 @@ For 3DMatch, to reproduce Table 2 in our main paper, we first extract features a
 ```shell
 python main.py configs/test/indoor.yaml
 ```
-the features will be saved to ```snapshot/indoor/3DMatch```. The estimation of the transformation parameters using RANSAC can then be carried out using:
+the features together with scores will be saved to ```snapshot/indoor/3DMatch```. The estimation of the transformation parameters using RANSAC can then be carried out using:
 ```shell
 for N_POINTS in 250 500 1000 2500 5000
 do
-  python scripts/evaluate_predator.py --source_path snapshot/indoor/3DMatch --n_points $N_POINTS --benchmark 3DMatch
+  python scripts/evaluate_predator.py --source_path snapshot/indoor/3DMatch --n_points $N_POINTS --benchmark 3DMatch --exp_dir snapshot/indoor/est_traj --sampling prob
 done
 ```
-dependent on ```n_points``` used by RANSAC, this might take a few minutes. The final results are stored in ```est_traj/{benchmark}/{n_points}/result```. To evaluate PREDATOR on 3DLoMatch benchmark, please also change ```3DMatch``` to ```3DLoMatch``` in ```configs/test/indoor.yaml```.
+dependent on ```n_points``` used by RANSAC, this might take a few minutes. The final results are stored in ```snapshot/indoor/est_traj/{benchmark}_{n_points}_prob/result```. To evaluate PREDATOR on 3DLoMatch benchmark, please also change ```3DMatch``` to ```3DLoMatch``` in ```configs/test/indoor.yaml```.
 
 #### Demo
 We prepared a small demo, which demonstrates the whole Predator pipeline using two random fragments from the 3DMatch dataset. To carry out the demo, please run:
@@ -122,19 +108,25 @@ The demo script will visualize input point clouds, inferred overlap regions, and
 
 <img src="assets/demo.png" alt="demo" width="750"/>
 
+### ModelNet(Synthetic)
+#### Train
+To train PREDATOR on ModelNet, please run:
+```
+python main.py configs/train/modelnet.yaml
+```
+
+We provide a small script to evaluate Predator on ModelNet test set, please run:
+```
+python main.py configs/test/modelnet.yaml
+```
+The rotation and translation errors could be better/worse than the reported ones due to randomness in RANSAC. 
+
 ### KITTI(Outdoor)
 We provide a small script to evaluate Predator on KITTI test set, after configuring KITTI dataset, please run:
 ```
 python main.py configs/test/kitti.yaml
 ```
 the results will be saved to the log file.
-
-### ModelNet(Synthetic)
-We provide a small script to evaluate Predator on ModelNet test set, please run:
-```
-python main.py configs/test/modelnet.yaml
-```
-The rotation and translation errors could be better/worse than the reported ones due to randomness in RANSAC. 
 
 
 ### Custom dataset
