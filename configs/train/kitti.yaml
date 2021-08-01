@@ -1,11 +1,11 @@
 misc:
-  exp_dir: test
-  mode: test
+  exp_dir: kitti
+  mode: train
   gpu_mode: True
   verbose: True
-  verbose_freq: 500
+  verbose_freq: 150
   snapshot_freq: 1
-  pretrain: weights/kitti.pth
+  pretrain: ''
 
 model:
   num_layers: 4 
@@ -37,7 +37,7 @@ overlap_attention_module:
 loss:
   pos_margin: 0.1
   neg_margin: 1.4
-  log_scale: 40
+  log_scale: 48
   pos_radius: 0.21
   safe_radius: 0.75
   overlap_radius: 0.45
@@ -54,7 +54,7 @@ optimiser:
   weight_decay: 0.000001
   momentum: 0.98
   scheduler: ExpLR
-  scheduler_gamma: 0.95
+  scheduler_gamma: 0.99
   scheduler_freq: 1
   iter_size: 1
 

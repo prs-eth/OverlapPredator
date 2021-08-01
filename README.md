@@ -139,11 +139,13 @@ We have a few tips for train/test on custom dataset
 If you find this code useful for your work or use it in your project, please consider citing:
 
 ```shell
-@inproceedings{predator,
-  title={PREDATOR: Registration of 3D Point Clouds with Low Overlap},
-  author={Shengyu Huang and Zan Gojcic and Mikhail Usvyatsov and Andreas Wieser, Konrad Schindler},
-  booktitle={IEEE Conference on Computer Vision and Pattern Recognition, CVPR},
-  year={2021}
+@InProceedings{Huang_2021_CVPR,
+    author    = {Huang, Shengyu and Gojcic, Zan and Usvyatsov, Mikhail and Wieser, Andreas and Schindler, Konrad},
+    title     = {Predator: Registration of 3D Point Clouds With Low Overlap},
+    booktitle = {Proceedings of the IEEE/CVF Conference on Computer Vision and Pattern Recognition (CVPR)},
+    month     = {June},
+    year      = {2021},
+    pages     = {4267-4276}
 }
 ```
 
