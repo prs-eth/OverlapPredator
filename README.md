@@ -20,6 +20,7 @@ If you have any questions, please let us know:
 - Zan Gojcic {zan.gojcic@geod.baug.ethz.ch}
 
 ## News
+- 2021-08-09: We've updated arxiv version of our [paper](https://arxiv.org/abs/2011.13005) with improved performance!
 - 2021-06-02: Fix feature gathering bug in k-nn graph, please see improved performance in this [issue](https://github.com/overlappredator/OverlapPredator/issues/15). Stay tunned for updates on other experiments!
 - 2021-05-31: Check our video and poster on [project page](https://overlappredator.github.io)! 
 - 2021-03-25: Camera ready is on arXiv! I also gave a talk on Predator(中文), you can find the recording here: [Bilibili](https://www.bilibili.com/video/BV1UK4y1U7Gs), [Youtube](https://www.youtube.com/watch?v=AZQGJa6R_4I&t=1563s) 
