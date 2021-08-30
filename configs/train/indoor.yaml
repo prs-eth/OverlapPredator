@@ -11,7 +11,7 @@ misc:
 model:
   num_layers: 4 
   in_points_dim: 3
-  first_feats_dim: 256
+  first_feats_dim: 128
   final_feats_dim: 32
   first_subsampling_dl: 0.025
   in_feats_dim: 1
@@ -30,7 +30,7 @@ model:
   condition_feature: True
 
 overlap_attention_module:
-  gnn_feats_dim: 512
+  gnn_feats_dim: 256
   dgcnn_k: 10
   num_head: 4
   nets: ['self','cross','self']
