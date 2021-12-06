@@ -9,13 +9,11 @@ open3d==0.10.0.0
 easydict==1.9
 scipy==1.5.4
 coloredlogs==15.0
-h5py==3.1.0
-GitPython==3.1.13
 PyYAML==5.4.1
 scikit_learn==0.24.1
 tensorboardX==2.1
 vtk_visualizer==0.9.6
-nibabel==3,2,1
+nibabel==3.2.1
 h5py==3.2.1
 coloredlogs==15.0
 gitpython==3.1.17
