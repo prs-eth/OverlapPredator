@@ -12,81 +12,87 @@ from common.misc import prepare_logger
 from collections import defaultdict
 import coloredlogs
 
+
 class IndoorTester(Trainer):
     """
     3DMatch tester
     """
-    def __init__(self,args):
-        Trainer.__init__(self,args)
-    
+
+    def __init__(self, args):
+        Trainer.__init__(self, args)
+
     def test(self):
         print('Start to evaluate on test datasets...')
-        os.makedirs(f'{self.snapshot_dir}/{self.config.benchmark}',exist_ok=True)
+        os.makedirs(f'{self.snapshot_dir}/{self.config.benchmark}', exist_ok=True)
 
         num_iter = int(len(self.loader['test'].dataset) // self.loader['test'].batch_size)
         c_loader_iter = self.loader['test'].__iter__()
         self.model.eval()
         with torch.no_grad():
-            for idx in tqdm(range(num_iter)): # loop through this epoch
-                inputs = c_loader_iter.next()
-                ##################################
-                # load inputs to device.
-                for k, v in inputs.items():  
-                    if type(v) == list:
-                        inputs[k] = [item.to(self.device) for item in v]
-                    else:
-                        inputs[k] = v.to(self.device)
-                ###############################################
-                # forward pass
-                feats, scores_overlap, scores_saliency = self.model(inputs)  #[N1, C1], [N2, C2]
-                pcd = inputs['points'][0]
-                len_src = inputs['stack_lengths'][0][0]
-                c_rot, c_trans = inputs['rot'], inputs['trans']
-                correspondence = inputs['correspondences']
+            try:
+                for idx in tqdm(range(num_iter)):  # loop through this epoch
+                    inputs = next(c_loader_iter)
+                    ##################################
+                    # load inputs to device.
+                    for k, v in inputs.items():
+                        if type(v) == list:
+                            inputs[k] = [item.to(self.device) for item in v]
+                        else:
+                            inputs[k] = v.to(self.device)
+                    ###############################################
+                    # forward pass
+                    feats, scores_overlap, scores_saliency = self.model(inputs)  # [N1, C1], [N2, C2]
+                    pcd = inputs['points'][0]
+                    len_src = inputs['stack_lengths'][0][0]
+                    c_rot, c_trans = inputs['rot'], inputs['trans']
+                    correspondence = inputs['correspondences']
 
-                src_pcd, tgt_pcd = pcd[:len_src], pcd[len_src:]
-                src_feats, tgt_feats = feats[:len_src], feats[len_src:]
+                    src_pcd, tgt_pcd = pcd[:len_src], pcd[len_src:]
+                    src_feats, tgt_feats = feats[:len_src], feats[len_src:]
 
-                data = dict()
-                data['pcd'] = pcd.cpu()
-                data['feats'] = feats.detach().cpu()
-                data['overlaps'] = scores_overlap.detach().cpu()
-                data['saliency'] = scores_saliency.detach().cpu()
-                data['len_src'] = len_src
-                data['rot'] = c_rot.cpu()
-                data['trans'] = c_trans.cpu()
+                    data = dict()
+                    data['pcd'] = pcd.cpu()
+                    data['feats'] = feats.detach().cpu()
+                    data['overlaps'] = scores_overlap.detach().cpu()
+                    data['saliency'] = scores_saliency.detach().cpu()
+                    data['len_src'] = len_src
+                    data['rot'] = c_rot.cpu()
+                    data['trans'] = c_trans.cpu()
 
-                torch.save(data,f'{self.snapshot_dir}/{self.config.benchmark}/{idx}.pth')
-
+                    torch.save(data, f'{self.snapshot_dir}/{self.config.benchmark}/{idx}.pth')
+            except StopIteration:
+                # Handle the end of the iteration if necessary
+                pass
 
 
 class KITTITester(Trainer):
     """
     KITTI tester
     """
-    def __init__(self,args):
-        Trainer.__init__(self,args)
-    
+
+    def __init__(self, args):
+        Trainer.__init__(self, args)
+
     def test(self):
         print('Start to evaluate on test datasets...')
         tsfm_est = []
         num_iter = int(len(self.loader['test'].dataset) // self.loader['test'].batch_size)
         c_loader_iter = self.loader['test'].__iter__()
-        
+
         self.model.eval()
-        rot_gt, trans_gt =[],[]
+        rot_gt, trans_gt = [], []
         with torch.no_grad():
-            for _ in tqdm(range(num_iter)): # loop through this epoch
+            for _ in tqdm(range(num_iter)):  # loop through this epoch
                 inputs = c_loader_iter.next()
                 ###############################################
                 # forward pass
-                for k, v in inputs.items():  
+                for k, v in inputs.items():
                     if type(v) == list:
                         inputs[k] = [item.to(self.device) for item in v]
                     else:
                         inputs[k] = v.to(self.device)
 
-                feats, scores_overlap, scores_saliency = self.model(inputs)  #[N1, C1], [N2, C2]
+                feats, scores_overlap, scores_saliency = self.model(inputs)  # [N1, C1], [N2, C2]
                 scores_overlap = scores_overlap.detach().cpu()
                 scores_saliency = scores_saliency.detach().cpu()
 
@@ -95,7 +101,7 @@ class KITTITester(Trainer):
                 rot_gt.append(c_rot.cpu().numpy())
                 trans_gt.append(c_trans.cpu().numpy())
                 src_feats, tgt_feats = feats[:len_src], feats[len_src:]
-                src_pcd , tgt_pcd = inputs['src_pcd_raw'], inputs['tgt_pcd_raw']
+                src_pcd, tgt_pcd = inputs['src_pcd_raw'], inputs['tgt_pcd_raw']
                 src_overlap, tgt_overlap = scores_overlap[:len_src], scores_overlap[len_src:]
                 src_saliency, tgt_saliency = scores_saliency[:len_src], scores_saliency[len_src:]
 
@@ -108,59 +114,59 @@ class KITTITester(Trainer):
                 src_scores = src_overlap * src_saliency
                 tgt_scores = tgt_overlap * tgt_saliency
 
-                if(src_pcd.size(0) > n_points):
+                if (src_pcd.size(0) > n_points):
                     idx = np.arange(src_pcd.size(0))
                     probs = (src_scores / src_scores.sum()).numpy().flatten()
-                    idx = np.random.choice(idx, size= n_points, replace=False, p=probs)
+                    idx = np.random.choice(idx, size=n_points, replace=False, p=probs)
                     src_pcd, src_feats = src_pcd[idx], src_feats[idx]
-                if(tgt_pcd.size(0) > n_points):
+                if (tgt_pcd.size(0) > n_points):
                     idx = np.arange(tgt_pcd.size(0))
                     probs = (tgt_scores / tgt_scores.sum()).numpy().flatten()
-                    idx = np.random.choice(idx, size= n_points, replace=False, p=probs)
+                    idx = np.random.choice(idx, size=n_points, replace=False, p=probs)
                     tgt_pcd, tgt_feats = tgt_pcd[idx], tgt_feats[idx]
 
                 ########################################
-                # run ransac 
+                # run ransac
                 distance_threshold = 0.3
-                ts_est = ransac_pose_estimation(src_pcd, tgt_pcd, src_feats, tgt_feats, mutual=False, distance_threshold=distance_threshold, ransac_n = 4)
+                ts_est = ransac_pose_estimation(src_pcd, tgt_pcd, src_feats, tgt_feats, mutual=False,
+                                                distance_threshold=distance_threshold, ransac_n=4)
                 tsfm_est.append(ts_est)
-        
+
         tsfm_est = np.array(tsfm_est)
-        rot_est = tsfm_est[:,:3,:3]
-        trans_est = tsfm_est[:,:3,3]
+        rot_est = tsfm_est[:, :3, :3]
+        trans_est = tsfm_est[:, :3, 3]
         rot_gt = np.array(rot_gt)
-        trans_gt = np.array(trans_gt)[:,:,0]
+        trans_gt = np.array(trans_gt)[:, :, 0]
 
         rot_threshold = 5
         trans_threshold = 2
 
-        np.savez(f'{self.snapshot_dir}/results',rot_est=rot_est, rot_gt=rot_gt, trans_est = trans_est, trans_gt = trans_gt)
+        np.savez(f'{self.snapshot_dir}/results', rot_est=rot_est, rot_gt=rot_gt, trans_est=trans_est, trans_gt=trans_gt)
 
         r_deviation = get_angle_deviation(rot_est, rot_gt)
-        translation_errors = np.linalg.norm(trans_est-trans_gt,axis=-1)
+        translation_errors = np.linalg.norm(trans_est - trans_gt, axis=-1)
 
-        flag_1=r_deviation<rot_threshold
-        flag_2=translation_errors<trans_threshold
-        correct=(flag_1 & flag_2).sum()
-        precision=correct/rot_gt.shape[0]
+        flag_1 = r_deviation < rot_threshold
+        flag_2 = translation_errors < trans_threshold
+        correct = (flag_1 & flag_2).sum()
+        precision = correct / rot_gt.shape[0]
 
-        message=f'\n Registration recall: {precision:.3f}\n'
+        message = f'\n Registration recall: {precision:.3f}\n'
 
         r_deviation = r_deviation[flag_1]
         translation_errors = translation_errors[flag_2]
 
-        errors=dict()
-        errors['rot_mean']=round(np.mean(r_deviation),3)
-        errors['rot_median']=round(np.median(r_deviation),3)
-        errors['trans_rmse'] = round(np.mean(translation_errors),3)
-        errors['trans_rmedse']=round(np.median(translation_errors),3)
-        errors['rot_std'] = round(np.std(r_deviation),3)
-        errors['trans_std']= round(np.std(translation_errors),3)
+        errors = dict()
+        errors['rot_mean'] = round(np.mean(r_deviation), 3)
+        errors['rot_median'] = round(np.median(r_deviation), 3)
+        errors['trans_rmse'] = round(np.mean(translation_errors), 3)
+        errors['trans_rmedse'] = round(np.median(translation_errors), 3)
+        errors['rot_std'] = round(np.std(r_deviation), 3)
+        errors['trans_std'] = round(np.std(translation_errors), 3)
 
-        message+=str(errors)
+        message += str(errors)
         print(message)
-        self.logger.write(message+'\n')
-
+        self.logger.write(message + '\n')
 
 
 def compute_rigid_transform(a, b, weights):
@@ -201,10 +207,11 @@ def compute_rigid_transform(a, b, weights):
     return tsfm.numpy()
 
 
-def compute_metrics(data , pred_transforms):
+def compute_metrics(data, pred_transforms):
     """
     Compute metrics required in the paper
     """
+
     def square_distance(src, dst):
         return torch.sum((src[:, :, None, :] - dst[:, None, :, :]) ** 2, dim=-1)
 
@@ -253,7 +260,8 @@ def compute_metrics(data , pred_transforms):
 
     return metrics
 
-def print_metrics(logger, summary_metrics , losses_by_iteration=None,title='Metrics'):
+
+def print_metrics(logger, summary_metrics, losses_by_iteration=None, title='Metrics'):
     """Prints out formated metrics to logger"""
 
     logger.info(title + ':')
@@ -275,6 +283,7 @@ def print_metrics(logger, summary_metrics , losses_by_iteration=None,title='Metr
         summary_metrics['chamfer_dist']
     ))
 
+
 def summarize_metrics(metrics):
     """Summaries computed metrices by taking mean over all data instances"""
     summarized = {}
@@ -283,22 +292,24 @@ def summarize_metrics(metrics):
             summarized[k[:-3] + 'rmse'] = np.sqrt(np.mean(metrics[k]))
         elif k.startswith('err'):
             summarized[k + '_mean'] = np.mean(metrics[k])
-            summarized[k + '_rmse'] = np.sqrt(np.mean(metrics[k]**2))
+            summarized[k + '_rmse'] = np.sqrt(np.mean(metrics[k] ** 2))
         else:
             summarized[k] = np.mean(metrics[k])
 
     return summarized
 
+
 class ModelnetTester(Trainer):
     """
     Modelnet tester
     """
-    def __init__(self,args):
-        Trainer.__init__(self,args)   
-    
+
+    def __init__(self, args):
+        Trainer.__init__(self, args)
+
     def test(self):
         print('Start to evaluate on test datasets...')
-        _logger, _log_path = prepare_logger(self.config, log_path=os.path.join(self.snapshot_dir,'results'))
+        _logger, _log_path = prepare_logger(self.config, log_path=os.path.join(self.snapshot_dir, 'results'))
 
         pred_transforms = []
         total_rotation = []
@@ -306,15 +317,15 @@ class ModelnetTester(Trainer):
 
         num_iter = int(len(self.loader['test'].dataset) // self.loader['test'].batch_size)
         c_loader_iter = self.loader['test'].__iter__()
-        
+
         self.model.eval()
         with torch.no_grad():
-            for idx in tqdm(range(num_iter)): # loop through this epoch
+            for idx in tqdm(range(num_iter)):  # loop through this epoch
                 inputs = c_loader_iter.next()
                 try:
                     ##################################
                     # load inputs to device.
-                    for k, v in inputs.items():  
+                    for k, v in inputs.items():
                         if type(v) == list:
                             inputs[k] = [item.to(self.device) for item in v]
                         elif type(v) == dict:
@@ -323,65 +334,65 @@ class ModelnetTester(Trainer):
                             inputs[k] = v.to(self.device)
 
                     rot_trace = inputs['sample']['transform_gt'][:, 0, 0] + inputs['sample']['transform_gt'][:, 1, 1] + \
-                            inputs['sample']['transform_gt'][:, 2, 2]
+                                inputs['sample']['transform_gt'][:, 2, 2]
                     rotdeg = torch.acos(torch.clamp(0.5 * (rot_trace - 1), min=-1.0, max=1.0)) * 180.0 / np.pi
                     total_rotation.append(np.abs(to_array(rotdeg)))
 
                     ###################################
                     # forward pass
-                    feats, scores_overlap, scores_saliency = self.model(inputs)  #[N1, C1], [N2, C2]
+                    feats, scores_overlap, scores_saliency = self.model(inputs)  # [N1, C1], [N2, C2]
                     scores_overlap = scores_overlap.detach().cpu()
                     scores_saliency = scores_saliency.detach().cpu()
 
                     len_src = inputs['stack_lengths'][0][0]
                     src_feats, tgt_feats = feats[:len_src], feats[len_src:]
-                    src_pcd , tgt_pcd = inputs['src_pcd_raw'], inputs['tgt_pcd_raw']
+                    src_pcd, tgt_pcd = inputs['src_pcd_raw'], inputs['tgt_pcd_raw']
                     src_overlap, tgt_overlap = scores_overlap[:len_src], scores_overlap[len_src:]
                     src_saliency, tgt_saliency = scores_saliency[:len_src], scores_saliency[len_src:]
 
-                    
                     ########################################
                     # run probabilistic sampling
                     n_points = 450
                     src_scores = src_overlap * src_saliency
                     tgt_scores = tgt_overlap * tgt_saliency
 
-                    if(src_pcd.size(0) > n_points):
+                    if (src_pcd.size(0) > n_points):
                         idx = np.arange(src_pcd.size(0))
                         probs = (src_scores / src_scores.sum()).numpy().flatten()
-                        idx = np.random.choice(idx, size= n_points, replace=False, p=probs)
+                        idx = np.random.choice(idx, size=n_points, replace=False, p=probs)
                         src_pcd, src_feats = src_pcd[idx], src_feats[idx]
-                    if(tgt_pcd.size(0) > n_points):
+                    if (tgt_pcd.size(0) > n_points):
                         idx = np.arange(tgt_pcd.size(0))
                         probs = (tgt_scores / tgt_scores.sum()).numpy().flatten()
-                        idx = np.random.choice(idx, size= n_points, replace=False, p=probs)
+                        idx = np.random.choice(idx, size=n_points, replace=False, p=probs)
                         tgt_pcd, tgt_feats = tgt_pcd[idx], tgt_feats[idx]
 
                     ########################################
-                    # run ransac 
+                    # run ransac
                     distance_threshold = 0.025
-                    ts_est = ransac_pose_estimation(src_pcd, tgt_pcd, src_feats, tgt_feats, mutual=False, distance_threshold=distance_threshold, ransac_n = 3)
-                except: # sometimes we left over with too few points in the bottleneck and our k-nn graph breaks
+                    ts_est = ransac_pose_estimation(src_pcd, tgt_pcd, src_feats, tgt_feats, mutual=False,
+                                                    distance_threshold=distance_threshold, ransac_n=3)
+                except:  # sometimes we left over with too few points in the bottleneck and our k-nn graph breaks
                     ts_est = np.eye(4)
                 pred_transforms.append(ts_est)
 
-
         total_rotation = np.concatenate(total_rotation, axis=0)
-        _logger.info(('Rotation range in data: {}(avg), {}(max)'.format(np.mean(total_rotation), np.max(total_rotation))))
+        _logger.info(
+            ('Rotation range in data: {}(avg), {}(max)'.format(np.mean(total_rotation), np.max(total_rotation))))
 
-        pred_transforms = torch.from_numpy(np.array(pred_transforms)).float()[:,None,:,:]
-        
+        pred_transforms = torch.from_numpy(np.array(pred_transforms)).float()[:, None, :, :]
+
         c_loader_iter = self.loader['test'].__iter__()
         num_processed, num_total = 0, len(pred_transforms)
         metrics_for_iter = [defaultdict(list) for _ in range(pred_transforms.shape[1])]
-        
+
         with torch.no_grad():
-            for idx in tqdm(range(num_iter)): # loop through this epoch
+            for idx in tqdm(range(num_iter)):  # loop through this epoch
                 inputs = c_loader_iter.next()
-    
+
                 batch_size = 1
                 for i_iter in range(pred_transforms.shape[1]):
-                    cur_pred_transforms = pred_transforms[num_processed:num_processed+batch_size, i_iter, :, :]
+                    cur_pred_transforms = pred_transforms[num_processed:num_processed + batch_size, i_iter, :, :]
                     metrics = compute_metrics(inputs['sample'], cur_pred_transforms)
                     for k in metrics:
                         metrics_for_iter[i_iter][k].append(metrics[k])
@@ -392,15 +403,14 @@ class ModelnetTester(Trainer):
                                         for k in metrics_for_iter[i_iter]}
             summary_metrics = summarize_metrics(metrics_for_iter[i_iter])
             print_metrics(_logger, summary_metrics, title='Evaluation result (iter {})'.format(i_iter))
-        
-        
+
 
 def get_trainer(config):
-    if(config.dataset == 'indoor'):
+    if (config.dataset == 'indoor'):
         return IndoorTester(config)
-    elif(config.dataset == 'kitti'):
+    elif (config.dataset == 'kitti'):
         return KITTITester(config)
-    elif(config.dataset == 'modelnet'):
+    elif (config.dataset == 'modelnet'):
         return ModelnetTester(config)
     else:
         raise NotImplementedError
