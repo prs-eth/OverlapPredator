@@ -114,7 +114,7 @@ def to_o3d_feats(embedding):
     Convert tensor/array to open3d features
     embedding:  [N, 3]
     """
-    feats = o3d.registration.Feature()
+    feats = o3d.pipelines.registration.Feature()
     feats.data = to_array(embedding).T
     return feats
 
@@ -129,7 +129,7 @@ def get_correspondences(src_pcd, tgt_pcd, trans, search_voxel_size, K=None):
             idx = idx[:K]
         for j in idx:
             correspondences.append([i, j])
-    
+
     correspondences = np.array(correspondences)
     correspondences = torch.from_numpy(correspondences)
     return correspondences
@@ -166,7 +166,7 @@ def random_sample(pcd, feats, N):
         choice = np.random.choice(n1, N)
 
     return pcd[choice], feats[choice]
-    
+
 def get_angle_deviation(R_pred,R_gt):
     """
     Calculate the angle deviation between two rotaion matrice
@@ -174,11 +174,11 @@ def get_angle_deviation(R_pred,R_gt):
     Input:
         R_pred: [B,3,3]
         R_gt  : [B,3,3]
-    Return: 
+    Return:
         degs:   [B]
     """
     R=np.matmul(R_pred,R_gt.transpose(0,2,1))
-    tr=np.trace(R,0,1,2) 
+    tr=np.trace(R,0,1,2)
     rads=np.arccos(np.clip((tr-1)/2,-1,1))  # clip to valid range
     degs=rads/np.pi*180
 
@@ -187,7 +187,7 @@ def get_angle_deviation(R_pred,R_gt):
 def ransac_pose_estimation(src_pcd, tgt_pcd, src_feat, tgt_feat, mutual = False, distance_threshold = 0.05, ransac_n = 3):
     """
     RANSAC pose estimation with two checkers
-    We follow D3Feat to set ransac_n = 3 for 3DMatch and ransac_n = 4 for KITTI. 
+    We follow D3Feat to set ransac_n = 3 for 3DMatch and ransac_n = 4 for KITTI.
     For 3DMatch dataset, we observe significant improvement after changing ransac_n from 4 to 3.
     """
     if(mutual):
@@ -202,25 +202,25 @@ def ransac_pose_estimation(src_pcd, tgt_pcd, src_feat, tgt_feat, mutual = False,
         corrs = o3d.utility.Vector2iVector(np.array([row_sel,col_sel]).T)
         src_pcd = to_o3d_pcd(src_pcd)
         tgt_pcd = to_o3d_pcd(tgt_pcd)
-        result_ransac = o3d.registration.registration_ransac_based_on_correspondence(
-            source=src_pcd, target=tgt_pcd,corres=corrs, 
+        result_ransac = o3d.pipelines.registration.registration_ransac_based_on_correspondence(
+            source=src_pcd, target=tgt_pcd,corres=corrs,
             max_correspondence_distance=distance_threshold,
-            estimation_method=o3d.registration.TransformationEstimationPointToPoint(False),
+            estimation_method=o3d.pipelines.registration.TransformationEstimationPointToPoint(False),
             ransac_n=4,
-            criteria=o3d.registration.RANSACConvergenceCriteria(50000, 1000))
+            criteria=o3d.pipelines.registration.RANSACConvergenceCriteria(50000, 1000))
     else:
         src_pcd = to_o3d_pcd(src_pcd)
         tgt_pcd = to_o3d_pcd(tgt_pcd)
         src_feats = to_o3d_feats(src_feat)
         tgt_feats = to_o3d_feats(tgt_feat)
 
-        result_ransac = o3d.registration.registration_ransac_based_on_feature_matching(
-            src_pcd, tgt_pcd, src_feats, tgt_feats,distance_threshold,
-            o3d.registration.TransformationEstimationPointToPoint(False), ransac_n,
-            [o3d.registration.CorrespondenceCheckerBasedOnEdgeLength(0.9),
-            o3d.registration.CorrespondenceCheckerBasedOnDistance(distance_threshold)],
-            o3d.registration.RANSACConvergenceCriteria(50000, 1000))
-            
+        result_ransac = o3d.pipelines.registration.registration_ransac_based_on_feature_matching(
+            src_pcd, tgt_pcd, src_feats, tgt_feats, True, distance_threshold,
+            o3d.pipelines.registration.TransformationEstimationPointToPoint(False), ransac_n,
+            [o3d.pipelines.registration.CorrespondenceCheckerBasedOnEdgeLength(0.9),
+            o3d.pipelines.registration.CorrespondenceCheckerBasedOnDistance(distance_threshold)],
+            o3d.pipelines.registration.RANSACConvergenceCriteria(50000, 1000))
+
     return result_ransac.transformation
 
 def get_inlier_ratio(src_pcd, tgt_pcd, src_feat, tgt_feat, rot, trans, inlier_distance_threshold = 0.1):
@@ -270,16 +270,16 @@ def get_inlier_ratio(src_pcd, tgt_pcd, src_feat, tgt_feat, rot, trans, inlier_di
 def mutual_selection(score_mat):
     """
     Return a {0,1} matrix, the element is 1 if and only if it's maximum along both row and column
-    
+
     Args: np.array()
         score_mat:  [B,N,N]
     Return:
-        mutuals:    [B,N,N] 
+        mutuals:    [B,N,N]
     """
     score_mat=to_array(score_mat)
     if(score_mat.ndim==2):
         score_mat=score_mat[None,:,:]
-    
+
     mutuals=np.zeros_like(score_mat)
     for i in range(score_mat.shape[0]): # loop through the batch
         c_mat=score_mat[i]
@@ -290,8 +290,8 @@ def mutual_selection(score_mat):
         max_along_column=np.argmax(c_mat,0)[None,:]
         np.put_along_axis(flag_row,max_along_row,1,1)
         np.put_along_axis(flag_column,max_along_column,1,0)
-        mutuals[i]=(flag_row.astype(np.bool)) & (flag_column.astype(np.bool))
-    return mutuals.astype(np.bool)  
+        mutuals[i]=(flag_row.astype(bool)) & (flag_column.astype(bool))
+    return mutuals.astype(bool)
 
 
 def get_scene_split(whichbenchmark):

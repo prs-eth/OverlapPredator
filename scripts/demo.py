@@ -145,7 +145,7 @@ def main(config, demo_loader):
     config.model.eval()
     c_loader_iter = demo_loader.__iter__()
     with torch.no_grad():
-        inputs = c_loader_iter.next()
+        inputs = next(c_loader_iter)
         ##################################
         # load inputs to device.
         for k, v in inputs.items():  
