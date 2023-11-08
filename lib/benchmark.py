@@ -105,8 +105,8 @@ def read_trajectory(filename, dim=4):
             if i % 5 != 0:
                 traj.append(lines[i].split('\t')[0:dim])
 
-        traj = np.asarray(traj, dtype=np.float).reshape(-1,dim,dim)
-        
+        traj = np.asarray(traj, dtype=float).reshape(-1,dim,dim)
+
         final_keys = np.asarray(final_keys)
 
         return final_keys, traj
@@ -115,16 +115,16 @@ def read_trajectory(filename, dim=4):
 def read_trajectory_info(filename, dim=6):
     """
     Function that reads the trajectory information saved in the 3DMatch/Redwood format to a numpy array.
-    Information file contains the variance-covariance matrix of the transformation paramaters. 
+    Information file contains the variance-covariance matrix of the transformation paramaters.
     Format specification can be found at http://redwood-data.org/indoor/fileformat.html
-    
+
     Args:
     filename (str): path to the '.txt' file containing the trajectory information data
     dim (int): dimension of the transformation matrix (4x4 for 3D data)
 
     Returns:
     n_frame (int): number of fragments in the scene
-    cov_matrix (numpy array): covariance matrix of the transformation matrices for n pairs[n,dim, dim] 
+    cov_matrix (numpy array): covariance matrix of the transformation matrices for n pairs[n,dim, dim]
     """
 
     with open(filename) as fid:
@@ -139,40 +139,40 @@ def read_trajectory_info(filename, dim=6):
         info_matrix = np.concatenate(
             [np.fromstring(item, sep='\t').reshape(1, -1) for item in contents[i * 7 + 1:i * 7 + 7]], axis=0)
         info_list.append(info_matrix)
-    
-    cov_matrix = np.asarray(info_list, dtype=np.float).reshape(-1,dim,dim)
-    
+
+    cov_matrix = np.asarray(info_list, dtype=float).reshape(-1,dim,dim)
+
     return n_frame, cov_matrix
 
 def extract_corresponding_trajectors(est_pairs,gt_pairs, gt_traj):
     """
     Extract only those transformation matrices from the ground truth trajectory that are also in the estimated trajectory.
-    
+
     Args:
     est_pairs (numpy array): indices of point cloud pairs with enough estimated overlap [m, 3]
     gt_pairs (numpy array): indices of gt overlaping point cloud pairs [n,3]
     gt_traj (numpy array): 3d array of the gt transformation parameters [n,4,4]
 
     Returns:
-    ext_traj (numpy array): gt transformation parameters for the point cloud pairs from est_pairs [m,4,4] 
+    ext_traj (numpy array): gt transformation parameters for the point cloud pairs from est_pairs [m,4,4]
     """
     ext_traj = np.zeros((len(est_pairs), 4, 4))
 
     for est_idx, pair in enumerate(est_pairs):
         pair[2] = gt_pairs[0][2]
         gt_idx = np.where((gt_pairs == pair).all(axis=1))[0]
-        
+
         ext_traj[est_idx,:,:] = gt_traj[gt_idx,:,:]
 
     return ext_traj
 
 def write_trajectory(traj,metadata, filename, dim=4):
     """
-    Writes the trajectory into a '.txt' file in 3DMatch/Redwood format. 
+    Writes the trajectory into a '.txt' file in 3DMatch/Redwood format.
     Format specification can be found at http://redwood-data.org/indoor/fileformat.html
 
     Args:
-    traj (numpy array): trajectory for n pairs[n,dim, dim] 
+    traj (numpy array): trajectory for n pairs[n,dim, dim]
     metadata (numpy array): file containing metadata about fragment numbers [n,3]
     filename (str): path where to save the '.txt' file containing trajectory data
     dim (int): dimension of the transformation matrix (4x4 for 3D data)
@@ -194,7 +194,7 @@ def read_pairs(src_path,tgt_path,n_points):
     tgt = torch.load(tgt_path)
     src_pcd, src_embedding = src['coords'],src['feats']
     tgt_pcd, tgt_embedding = tgt['coords'], tgt['feats']
-    
+
     #permute and randomly select 2048/1024 points
     if(src_pcd.shape[0]>n_points):
         src_permute=np.random.permutation(src_pcd.shape[0])[:n_points]
@@ -214,7 +214,7 @@ def evaluate_registration(num_fragment, result, result_pairs, gt_pairs, gt, gt_i
     """
     Evaluates the performance of the registration algorithm according to the evaluation protocol defined
     by the 3DMatch/Redwood datasets. The evaluation protocol can be found at http://redwood-data.org/indoor/registration.html
-    
+
     Args:
     num_fragment (int): path to the '.txt' file containing the trajectory information data
     result (numpy array): estimated transformation matrices [n,4,4]
@@ -230,7 +230,7 @@ def evaluate_registration(num_fragment, result, result_pairs, gt_pairs, gt, gt_i
     """
 
     err2 = err2 ** 2
-    gt_mask = np.zeros((num_fragment, num_fragment), dtype=np.int)
+    gt_mask = np.zeros((num_fragment, num_fragment), dtype=int)
     flags=[]
 
     for idx in range(gt_pairs.shape[0]):
@@ -297,7 +297,7 @@ def benchmark(est_folder,gt_folder):
 
 
             temp_precision, temp_recall,c_flag = evaluate_registration(n_fragments, est_traj, est_pairs, gt_pairs, gt_traj, gt_traj_cov)
-            
+
             # Filter out the estimated rotation matrices
             ext_gt_traj = extract_corresponding_trajectors(est_pairs,gt_pairs, gt_traj)
 
