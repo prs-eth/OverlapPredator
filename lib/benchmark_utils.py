@@ -77,8 +77,9 @@ def to_tensor(array):
     """
     Convert array to tensor
     """
-    if(not isinstance(array,torch.Tensor)):
-        return torch.from_numpy(array).float()
+    if not isinstance(array, torch.Tensor):
+        # Make a copy of the array to ensure it is writable
+        return torch.from_numpy(array.copy()).float()
     else:
         return array
 
