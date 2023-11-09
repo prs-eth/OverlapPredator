@@ -39,8 +39,10 @@ if __name__ == '__main__':
         open(os.path.join(config.snapshot_dir, 'config.json'), 'w'),
         indent=4,
     )
+    # Your existing configuration check
     if config.gpu_mode:
-        config.device = torch.device('cuda')
+        # Checks if CUDA is available and then sets to CUDA device, else uses CPU
+        config.device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
     else:
         config.device = torch.device('cpu')
 
