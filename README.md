@@ -30,7 +30,7 @@ If you have any questions, please let us know:
 
 ## Instructions
 This code has been tested on 
-- Python 3.8.5, PyTorch 1.7.1, CUDA 11.2, gcc 9.3.0, GeForce RTX 3090/GeForce GTX 1080Ti
+- Python 3.10, PyTorch 2.0.1, CUDA 11.7, gcc 9.3.0, GeForce RTX 3090/GeForce GTX 1080Ti
 
 **Note**: We observe random data loader crashes due to memory issues, if you observe similar issues, please consider reducing the number of workers or increasing CPU RAM. We now released a sparse convolution-based Predator, have a look [here](https://github.com/ShengyuH/OverlapPredator.Mink.git)!
 
